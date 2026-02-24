@@ -431,7 +431,7 @@
       // Construir pantalla de revisión
       const review = document.createElement("div");
       review.innerHTML = `
-        <div class="hint">Revisa y corrige lo detectado. Si algo no aparece en tu presupuesto, déjalo vacío.</div>
+        <div class="hint" style="background:#fff8e1;border-left:3px solid #f59e0b;padding:10px 12px;border-radius:4px;margin-bottom:8px">⚠️ <strong>Revisa todos los datos antes de confirmar</strong> — especialmente TIN, TAE y cantidades. Las fotos pueden tener errores de lectura. Corrige cualquier valor incorrecto antes de aplicar.</div>
         <div class="fc-review-grid"></div>
         <details class="details" style="margin-top:10px">
           <summary>Texto detectado (para depurar)</summary>
@@ -458,6 +458,16 @@
         wrap.appendChild(inp);
         grid.appendChild(wrap);
         return inp;
+      }
+
+      // Campos de vehículo detectados
+      const veh = parsed.vehicle || {};
+      if(veh.brand || veh.model || veh.version_text){
+        const vehDiv = document.createElement("div");
+        vehDiv.style.cssText = "background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:10px 12px;margin-bottom:10px";
+        vehDiv.innerHTML = `<div class="label" style="font-weight:600;margin-bottom:4px">🚗 Vehículo detectado</div>
+          <div class="small">${[veh.brand, veh.model, veh.version_text].filter(Boolean).map(s=>_escHtml(s)).join(" · ")}</div>`;
+        grid.parentNode.insertBefore(vehDiv, grid);
       }
 
       const dealType = parsed.deal?.deal_type || "loan";
@@ -490,6 +500,14 @@
       review.querySelector("#btnImpApply").addEventListener("click", ()=>{
         const asNum = (s)=>{ const v=_parseEsNumber(s); return (v===null)?0:v; };
         const asInt = (s)=>{ const v=Math.round(Number(String(s).replace(/[^\d-]/g,""))); return Number.isFinite(v)?v:0; };
+
+        // Auto-rellenar marca/modelo/versión si se detectaron
+        const vehData = parsed.vehicle || {};
+        if(vehData.brand && car){
+          if(!car.brand) car.brand = vehData.brand;
+          if(!car.model) car.model = vehData.model || "";
+          if(!car.version) car.version = vehData.version_text || "";
+        }
 
         const dtype = String(inpType.value||"").trim().toLowerCase();
         const pvp = asNum(inpPvp.value);
