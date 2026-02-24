@@ -339,9 +339,10 @@
       const skodaM = T.match(/(?:SKODA|ŠKODA)\s+(ELROQ|ENYAQ|FABIA|OCTAVIA|KODIAQ|KAROQ|KAMIQ|SCALA|SUPERB|EPIQ)/);
       if(skodaM){ out.vehicle.brand = "Škoda"; out.vehicle.model = skodaM[1].trim(); }
 
-      // Lynk & Co: "Marca LYNK & CO Modelo 01..."
-      const lynkM = T.match(/LYNK\s*&?\s*CO[^A-Z0-9]{0,10}(0[0-9])/);
-      if(lynkM){ out.vehicle.brand = "Lynk & Co"; out.vehicle.model = lynkM[1].trim(); }
+      // Lynk & Co
+      const lynkBrand = T.match(/LYNK\s*[&Y]?\s*CO/);
+      const lynkMod = lynkBrand ? T.match(/(?:MODELO|MODEL)[:\s]*(0[0-9])/) : null;
+      if(lynkBrand){ out.vehicle.brand = "Lynk & Co"; out.vehicle.model = lynkMod ? lynkMod[1].trim() : "01"; }
 
       // Renault: "RENAULT RAFALE..."
       const renaultM = T.match(/RENAULT\s+(RAFALE|ARKANA|AUSTRAL|CAPTUR|CLIO|MEGANE|ESPACE|SCENIC|SYMBIOZ|ZOE|5\s*E-TECH)/);
