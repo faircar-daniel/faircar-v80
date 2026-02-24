@@ -329,6 +329,34 @@
       }
     }catch(e){}
 
+    // --- Extraer marca/modelo/versión del texto ---
+    try{
+      // Toyota: "TOYOTA C-HR+ ELECTRIC..." o "Tu Toyota C-HR..."
+      const toyotaM = T.match(/TOYOTA\s+(C-HR\+?|YARIS(?:\s+CROSS)?|RAV4|COROLLA(?:\s+CROSS)?|AYGO\s*X|BZ4X|CHR)/);
+      if(toyotaM){ out.vehicle.brand = "Toyota"; out.vehicle.model = toyotaM[1].trim().replace(/\s+/g," "); }
+
+      // Skoda: "Tu Škoda Elroq..."
+      const skodaM = T.match(/(?:SKODA|ŠKODA)\s+(ELROQ|ENYAQ|FABIA|OCTAVIA|KODIAQ|KAROQ|KAMIQ|SCALA|SUPERB|EPIQ)/);
+      if(skodaM){ out.vehicle.brand = "Škoda"; out.vehicle.model = skodaM[1].trim(); }
+
+      // Lynk & Co: "Marca LYNK & CO Modelo 01..."
+      const lynkM = T.match(/LYNK\s*&?\s*CO[^A-Z0-9]{0,10}(0[0-9])/);
+      if(lynkM){ out.vehicle.brand = "Lynk & Co"; out.vehicle.model = lynkM[1].trim(); }
+
+      // Renault: "RENAULT RAFALE..."
+      const renaultM = T.match(/RENAULT\s+(RAFALE|ARKANA|AUSTRAL|CAPTUR|CLIO|MEGANE|ESPACE|SCENIC|SYMBIOZ|ZOE|5\s*E-TECH)/);
+      if(renaultM){ out.vehicle.brand = "Renault"; out.vehicle.model = renaultM[1].trim().replace(/\s+/g," "); }
+
+      // Versión: buscar después del modelo si existe (texto entre modelo y siguiente campo)
+      if(out.vehicle.brand && !out.vehicle.version_text){
+        const verM = T.match(/(?:VERSIÓN|VERSION|MODELO)[:\s]+([A-Z0-9][^
+]{5,60}?)(?:
+|COMBUSTIBLE|COLOR|ENTRADA|CUOTA)/);
+        if(verM) out.vehicle.version_text = verM[1].trim().slice(0,80);
+      }
+    }catch(e){}
+    // --- Fin extracción vehículo ---
+
     return out;
   }
 
