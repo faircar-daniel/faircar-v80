@@ -5202,21 +5202,22 @@ mount.appendChild(step);
 
     // --- Botón de importar presupuesto en paso 1 ---
     const importBox = document.createElement("div");
-    importBox.style.cssText = "background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;margin-bottom:16px";
+    importBox.className = "hint";
+    importBox.style.cssText = "margin-bottom:16px;padding:14px 16px";
     importBox.innerHTML = `
-      <div style="font-weight:600;margin-bottom:6px;font-size:15px">📄 ¿Tienes el presupuesto del concesionario?</div>
-      <div class="small" style="margin-bottom:10px;color:#555">Importa la foto o PDF y FairCar rellenará marca, modelo y datos de financiación automáticamente.</div>
+      <div class="label" style="margin-bottom:6px">📄 ¿Tienes el presupuesto del concesionario?</div>
+      <div class="smallmuted" style="margin-bottom:12px">Importa la foto o PDF y FairCar rellenará marca, modelo y datos de financiación automáticamente.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <label style="cursor:pointer">
           <input type="file" accept="image/*" capture="environment" style="display:none" id="impCamBtn_${car.letter}">
-          <span class="btn ghost" style="font-size:13px">📷 Foto del presupuesto</span>
+          <span class="btn ghost">📷 Foto del presupuesto</span>
         </label>
         <label style="cursor:pointer">
           <input type="file" accept="image/*,application/pdf,.pdf" style="display:none" id="impFileBtn_${car.letter}">
-          <span class="btn ghost" style="font-size:13px">📎 PDF / imagen</span>
+          <span class="btn ghost">📎 PDF / imagen</span>
         </label>
       </div>
-      <div id="impStatus_${car.letter}" style="margin-top:8px;font-size:13px;color:#666;display:none"></div>
+      <div id="impStatus_${car.letter}" class="smallmuted" style="margin-top:8px;display:none"></div>
     `;
     step.appendChild(importBox);
 
@@ -5226,7 +5227,7 @@ mount.appendChild(step);
         const file = inputEl.files && inputEl.files[0];
         if(!file) return;
         inputEl.value = "";
-        const statusEl = document.getElementById("impStatus_" + car.letter);
+        const statusEl = importBox.querySelector("#impStatus_" + car.letter);
         if(statusEl){ statusEl.style.display="block"; statusEl.textContent="Leyendo presupuesto…"; }
         const onProg = (p, msg)=>{ if(statusEl) statusEl.textContent = msg || "Procesando…"; };
         try{
@@ -5238,8 +5239,8 @@ mount.appendChild(step);
         }
       });
     }
-    const camInput1 = document.getElementById("impCamBtn_" + car.letter);
-    const fileInput1 = document.getElementById("impFileBtn_" + car.letter);
+    const camInput1 = importBox.querySelector("#impCamBtn_" + car.letter);
+    const fileInput1 = importBox.querySelector("#impFileBtn_" + car.letter);
     if(camInput1) _setupImportBtn1(camInput1);
     if(fileInput1) _setupImportBtn1(fileInput1);
     // --- Fin botón importar ---
