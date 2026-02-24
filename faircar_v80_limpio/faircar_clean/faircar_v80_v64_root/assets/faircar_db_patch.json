@@ -1,0 +1,2722 @@
+{
+  "upsert": {
+    "Toyota": {
+      "models": {
+        "Aygo X": {
+          "versions": [
+            {
+              "name": "Play / Like 72cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 72,
+              "power_kw": 53,
+              "priceRange": [
+                14800,
+                14800
+              ],
+              "consumption": {
+                "real": 4.8
+              }
+            },
+            {
+              "name": "Hybrid 2026 116cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 116,
+              "power_kw": 85,
+              "priceRange": [
+                19100,
+                19100
+              ],
+              "consumption": {
+                "real": 4.0
+              }
+            }
+          ],
+          "segment": "pequeño",
+          "priceFrom": 14800
+        },
+        "Yaris": {
+          "versions": [
+            {
+              "name": "120H Active Plus 116cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 116,
+              "power_kw": 85,
+              "priceRange": [
+                21000,
+                21000
+              ],
+              "consumption": {
+                "real": 3.9
+              }
+            },
+            {
+              "name": "130H GR Sport 130cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 130,
+              "power_kw": 96,
+              "priceRange": [
+                24150,
+                24150
+              ],
+              "consumption": {
+                "real": 4.2
+              }
+            }
+          ],
+          "segment": "pequeño",
+          "priceFrom": 21000
+        },
+        "GR Yaris": {
+          "versions": [
+            {
+              "name": "RZ Circuit Pack 280cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 280,
+              "power_kw": 206,
+              "priceRange": [
+                48500,
+                48500
+              ],
+              "consumption": {
+                "real": 8.2
+              }
+            }
+          ],
+          "segment": "deportivo",
+          "priceFrom": 48500
+        },
+        "Yaris Cross": {
+          "versions": [
+            {
+              "name": "130H Active 130cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 130,
+              "power_kw": 96,
+              "priceRange": [
+                26570,
+                26570
+              ],
+              "consumption": {
+                "real": 4.5
+              }
+            },
+            {
+              "name": "130H Style AWD-i 130cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 130,
+              "power_kw": 96,
+              "priceRange": [
+                32069,
+                32069
+              ],
+              "consumption": {
+                "real": 4.8
+              }
+            }
+          ],
+          "segment": "suv",
+          "priceFrom": 26570
+        },
+        "Corolla": {
+          "versions": [
+            {
+              "name": "140H Active Plus 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                24700,
+                24700
+              ],
+              "consumption": {
+                "real": 4.4
+              }
+            },
+            {
+              "name": "200H GR Sport 196cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 196,
+              "power_kw": 144,
+              "priceRange": [
+                30200,
+                30200
+              ],
+              "consumption": {
+                "real": 4.7
+              }
+            }
+          ],
+          "segment": "mediano",
+          "priceFrom": 24700
+        },
+        "Corolla Touring Sports": {
+          "versions": [
+            {
+              "name": "140H Style (Famil.) 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                26200,
+                26200
+              ],
+              "consumption": {
+                "real": 4.5
+              }
+            }
+          ],
+          "segment": "mediano",
+          "priceFrom": 26200
+        },
+        "Corolla Sedan": {
+          "versions": [
+            {
+              "name": "140H Style 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                30820,
+                30820
+              ],
+              "consumption": {
+                "real": 4.4
+              }
+            }
+          ],
+          "segment": "mediano",
+          "priceFrom": 30820
+        },
+        "C-HR": {
+          "versions": [
+            {
+              "name": "140H Advance 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                30798,
+                30798
+              ],
+              "consumption": {
+                "real": 4.7
+              }
+            },
+            {
+              "name": "200H GR Sport 197cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 197,
+              "power_kw": 145,
+              "priceRange": [
+                35500,
+                35500
+              ],
+              "consumption": {
+                "real": 4.9
+              }
+            },
+            {
+              "name": "220PH Advance 223cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 223,
+              "power_kw": 164,
+              "priceRange": [
+                35670,
+                35670
+              ],
+              "consumption": {
+                "electric_range": 66
+              }
+            }
+          ],
+          "segment": "suv",
+          "priceFrom": 30798
+        },
+        "RAV4": {
+          "versions": [
+            {
+              "name": "Hybrid 200 Advance 218cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "priceRange": [
+                43500,
+                43500
+              ],
+              "consumption": {
+                "real": 5.6
+              }
+            },
+            {
+              "name": "Hybrid 222 AWD 222cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 222,
+              "power_kw": 163,
+              "priceRange": [
+                46123,
+                46123
+              ],
+              "consumption": {
+                "real": 5.8
+              }
+            },
+            {
+              "name": "Plug-in 300 Adv. 306cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 306,
+              "power_kw": 225,
+              "priceRange": [
+                46500,
+                46500
+              ],
+              "consumption": {
+                "electric_range": 100
+              }
+            }
+          ],
+          "segment": "suv",
+          "priceFrom": 43500
+        },
+        "Camry": {
+          "versions": [
+            {
+              "name": "2.5 Hybrid Adv. 218cv",
+              "type": "hibrido",
+              "displacement": "2.5",
+              "power_cv": 218,
+              "power_kw": 160,
+              "priceRange": [
+                42600,
+                42600
+              ],
+              "consumption": {
+                "real": 5.3
+              }
+            }
+          ],
+          "segment": "mediano",
+          "priceFrom": 42600
+        },
+        "Prius": {
+          "versions": [
+            {
+              "name": "1.8 PHEV Adv. 223cv",
+              "type": "phev",
+              "displacement": "1.8",
+              "power_cv": 223,
+              "power_kw": 164,
+              "priceRange": [
+                37900,
+                37900
+              ],
+              "consumption": {
+                "electric_range": 69
+              }
+            }
+          ],
+          "segment": "mediano",
+          "priceFrom": 37900
+        },
+        "bZ4X": {
+          "versions": [
+            {
+              "name": "Advance (Filtro) 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                39500,
+                39500
+              ],
+              "consumption": {
+                "range": 569
+              }
+            }
+          ],
+          "segment": "suv",
+          "priceFrom": 39500
+        },
+        "Highlander": {
+          "versions": [
+            {
+              "name": "2.5 HEV 4WD Adv. 248cv",
+              "type": "hibrido",
+              "displacement": "2.5",
+              "power_cv": 248,
+              "power_kw": 182,
+              "priceRange": [
+                59250,
+                59250
+              ],
+              "consumption": {
+                "real": 7.0
+              }
+            }
+          ],
+          "segment": "suv",
+          "priceFrom": 59250
+        },
+        "Land Cruiser": {
+          "versions": [
+            {
+              "name": "250 Hybrid 48V 204cv",
+              "type": "diesel",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                87950,
+                87950
+              ],
+              "consumption": {
+                "real": 9.6
+              }
+            }
+          ],
+          "segment": "suv",
+          "priceFrom": 87950
+        }
+      }
+    },
+    "Škoda": {
+      "models": {
+        "Fabia": {
+          "segment": "pequeño",
+          "versions": [
+            {
+              "name": "1.0 MPI Essence 80cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 80,
+              "power_kw": 59,
+              "priceRange": [
+                21100,
+                21100
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.0 TSI Selection 95cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 95,
+              "power_kw": 70,
+              "priceRange": [
+                23000,
+                23000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI Monte Carlo 150cv",
+              "type": "gasolina",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                29500,
+                29500
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Scala": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "1.0 TSI Selection 95cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 95,
+              "power_kw": 70,
+              "priceRange": [
+                27642,
+                27642
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI Selection 150cv",
+              "type": "gasolina",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                29831,
+                29831
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Kamiq": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "1.0 TSI Selection 95cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 95,
+              "power_kw": 70,
+              "priceRange": [
+                28600,
+                28600
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.0 TSI Selection DSG 115cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                30500,
+                30500
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI Monte Carlo 150cv",
+              "type": "gasolina",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                32700,
+                32700
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Octavia": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "1.5 TSI Selection 115cv",
+              "type": "gasolina",
+              "displacement": "1.5",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                28850,
+                28850
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI m-HEV DSG 150cv",
+              "type": "hibrido",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                32500,
+                32500
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Karoq": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "1.0 TSI Selection 116cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 116,
+              "power_kw": 85,
+              "priceRange": [
+                34531,
+                34531
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI Plus DSG 150cv",
+              "type": "gasolina",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                40231,
+                40231
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "2.0 TDI Selection DSG 150cv",
+              "type": "diesel",
+              "displacement": "2.0",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                41431,
+                41431
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Kodiaq": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "2.0 TSI DSG RS 4WD 265cv",
+              "type": "gasolina",
+              "displacement": "2.0",
+              "power_cv": 265,
+              "power_kw": 195,
+              "priceRange": [
+                62700,
+                62700
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "2.0 TDI DSG Selection 150cv",
+              "type": "diesel",
+              "displacement": "2.0",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                49421,
+                49421
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "2.0 TDI DSG 4WD 193cv",
+              "type": "diesel",
+              "displacement": "2.0",
+              "power_cv": 193,
+              "power_kw": 142,
+              "priceRange": [
+                52431,
+                52431
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI DSG m-HEV 150cv",
+              "type": "hibrido",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                46431,
+                46431
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Superb": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "1.5 TSI m-HEV Selection 150cv",
+              "type": "hibrido",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                46999,
+                46999
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 TSI PHEV DSG 204cv",
+              "type": "phev",
+              "displacement": "1.5",
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                45908,
+                45908
+              ],
+              "consumption": {
+                "electric_range": 137
+              }
+            }
+          ]
+        },
+        "Elroq": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "50 (52 kWh neta) 170cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 170,
+              "power_kw": 125,
+              "priceRange": [
+                30700,
+                30700
+              ],
+              "consumption": {
+                "range": 375
+              },
+              "battery_kwh": 52.0
+            },
+            {
+              "name": "60 (59 kWh neta) 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                34600,
+                34600
+              ],
+              "consumption": {
+                "range": 403
+              },
+              "battery_kwh": 59.0
+            },
+            {
+              "name": "85 (82 kWh neta) 286cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 286,
+              "power_kw": 210,
+              "priceRange": [
+                39700,
+                39700
+              ],
+              "consumption": {
+                "range": 581
+              },
+              "battery_kwh": 82.0
+            }
+          ]
+        },
+        "Enyaq": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "60 (63 kWh) 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                44580,
+                44580
+              ],
+              "consumption": {
+                "range": 442
+              },
+              "battery_kwh": 63.0
+            },
+            {
+              "name": "85 (82 kWh) 286cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 286,
+              "power_kw": 210,
+              "priceRange": [
+                49723,
+                49723
+              ],
+              "consumption": {
+                "range": 589
+              },
+              "battery_kwh": 82.0
+            },
+            {
+              "name": "RS 4WD (84 kWh) 340cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 340,
+              "power_kw": 250,
+              "priceRange": [
+                56723,
+                56723
+              ],
+              "consumption": {
+                "range": 568
+              },
+              "battery_kwh": 84.0
+            }
+          ]
+        }
+      }
+    },
+    "Kia": {
+      "models": {
+        "Picanto": {
+          "segment": "pequeño",
+          "versions": [
+            {
+              "name": "Concept / Drive 68cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 68,
+              "power_kw": 50,
+              "priceRange": [
+                17566,
+                17566
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "GT-line (4 o 5 pl.) 68cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 68,
+              "power_kw": 50,
+              "priceRange": [
+                20193,
+                20193
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Stonic": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Drive 1.0 T-GDi 100cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                20920,
+                20920
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Concept 1.0 T-GDi MHEV 115cv",
+              "type": "hibrido",
+              "displacement": "1.0",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                19190,
+                19190
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / GT-Line MHEV 115cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                22220,
+                22220
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Ceed": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "Concept / Drive 1.0 100cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                25197,
+                25197
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / Tech MHEV 100cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                28474,
+                28474
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Tech / GT Line MHEV 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                29624,
+                29624
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "XCeed": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Business / Drive 1.0 115cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                27444,
+                27444
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / GT-Line 1.6T 150cv",
+              "type": "gasolina",
+              "displacement": "1.6",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                30524,
+                30524
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / Tech MHEV 115cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                28594,
+                28594
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Niro": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Concept / Drive HEV 138cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 138,
+              "power_kw": 101,
+              "priceRange": [
+                25000,
+                25000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Concept / Emotion PHEV 180cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 180,
+              "power_kw": 132,
+              "priceRange": [
+                35670,
+                35670
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Sportage": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Concept 1.6 TGDi 160cv",
+              "type": "gasolina",
+              "displacement": "1.6",
+              "power_cv": 160,
+              "power_kw": 118,
+              "priceRange": [
+                33868,
+                33868
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Business / Tech MHEV 160cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 160,
+              "power_kw": 118,
+              "priceRange": [
+                36118,
+                36118
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / Tech HEV 215cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 215,
+              "power_kw": 158,
+              "priceRange": [
+                41168,
+                41168
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "GT-line HEV 4x4 239cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 239,
+              "power_kw": 176,
+              "priceRange": [
+                51666,
+                51666
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Sorento": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Drive / Emotion 2.2 194cv",
+              "type": "diesel",
+              "displacement": "2.2",
+              "power_cv": 194,
+              "power_kw": 143,
+              "priceRange": [
+                50020,
+                50020
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / Emotion HEV 215cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 215,
+              "power_kw": 158,
+              "priceRange": [
+                51863,
+                51863
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "Drive / Emotion PHEV 252cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 252,
+              "power_kw": 185,
+              "priceRange": [
+                60683,
+                60683
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "EV3": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Air Standard Range 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                32196,
+                32196
+              ],
+              "consumption": {
+                "range": 410
+              }
+            },
+            {
+              "name": "Earth Long Range 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                40963,
+                40963
+              ],
+              "consumption": {
+                "range": 600
+              }
+            }
+          ]
+        },
+        "EV6": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Air / GT-Line RWD 229cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 229,
+              "power_kw": 168,
+              "priceRange": [
+                28721,
+                28721
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "EV9": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "GT Line 6 o 7 pl. 384cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 384,
+              "power_kw": 282,
+              "priceRange": [
+                86200,
+                86200
+              ],
+              "consumption": {}
+            }
+          ]
+        }
+      }
+    },
+    "Volkswagen": {
+      "models": {
+        "Polo": {
+          "segment": "pequeño",
+          "versions": [
+            {
+              "name": "1.0 MPI Edition 80cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 80,
+              "power_kw": 59,
+              "priceRange": [
+                18000,
+                18000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.0 TSI Selection 95cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 95,
+              "power_kw": 70,
+              "priceRange": [
+                20000,
+                20000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.0 TSI Life DSG 115cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                23500,
+                23500
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "T-Cross": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "1.0 TSI Selection 95cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 95,
+              "power_kw": 70,
+              "priceRange": [
+                20300,
+                20300
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.0 TSI Life 115cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                24200,
+                24200
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "T-Roc": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "eTSI Selection 116cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 116,
+              "power_kw": 85,
+              "priceRange": [
+                29600,
+                29600
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "R-Line eTSI 150cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                36900,
+                36900
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "eTSI Más 150cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                32900,
+                32900
+              ],
+              "consumption": {}
+            }
+          ]
+        },
+        "Golf": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "GTI 265cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 265,
+              "power_kw": 195,
+              "priceRange": [
+                49500,
+                49500
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "2.0 TDI Selection 150cv",
+              "type": "diesel",
+              "displacement": "2.0",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                31000,
+                31000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.0 eTSI Edition 115cv",
+              "type": "hibrido",
+              "displacement": "1.0",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                25000,
+                25000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 eTSI Selection 150cv",
+              "type": "hibrido",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                29000,
+                29000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "eHybrid (PHEV) 204cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                36000,
+                36000
+              ],
+              "consumption": {
+                "electric_range": 120
+              }
+            },
+            {
+              "name": "GTE (PHEV) 272cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 272,
+              "power_kw": 200,
+              "priceRange": [
+                48000,
+                48000
+              ],
+              "consumption": {
+                "electric_range": 120
+              }
+            }
+          ]
+        },
+        "Tiguan": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "2.0 TDI DSG 150cv",
+              "type": "diesel",
+              "displacement": "2.0",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                38000,
+                38000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "1.5 eTSI m-HEV 150cv",
+              "type": "hibrido",
+              "displacement": "1.5",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                37000,
+                37000
+              ],
+              "consumption": {}
+            },
+            {
+              "name": "eHybrid 272 272cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 272,
+              "power_kw": 200,
+              "priceRange": [
+                47000,
+                47000
+              ],
+              "consumption": {
+                "electric_range": 100
+              }
+            }
+          ]
+        },
+        "ID.3": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "Pro (58 kWh) 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                38000,
+                38000
+              ],
+              "consumption": {
+                "range": 435
+              },
+              "battery_kwh": 58.0
+            },
+            {
+              "name": "Pro S (77 kWh) 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "priceRange": [
+                44000,
+                44000
+              ],
+              "consumption": {
+                "range": 557
+              },
+              "battery_kwh": 77.0
+            }
+          ]
+        },
+        "ID.4": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Pure (52 kWh) 170cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 170,
+              "power_kw": 125,
+              "priceRange": [
+                42000,
+                42000
+              ],
+              "consumption": {
+                "range": 360
+              },
+              "battery_kwh": 52.0
+            },
+            {
+              "name": "Pro (77 kWh) 286cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 286,
+              "power_kw": 210,
+              "priceRange": [
+                48000,
+                48000
+              ],
+              "consumption": {
+                "range": 550
+              },
+              "battery_kwh": 77.0
+            },
+            {
+              "name": "GTX AWD 340cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 340,
+              "power_kw": 250,
+              "priceRange": [
+                56000,
+                56000
+              ],
+              "consumption": {
+                "range": 510
+              }
+            }
+          ]
+        },
+        "ID.7": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "Pro (77 kWh) 286cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 286,
+              "power_kw": 210,
+              "priceRange": [
+                55000,
+                55000
+              ],
+              "consumption": {
+                "range": 615
+              },
+              "battery_kwh": 77.0
+            }
+          ]
+        },
+        "ID.Buzz": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "Pro (79 kWh) 286cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 286,
+              "power_kw": 210,
+              "priceRange": [
+                54290,
+                54290
+              ],
+              "consumption": {
+                "range": 420
+              },
+              "battery_kwh": 79.0
+            }
+          ]
+        }
+      }
+    },
+    "Renault": {
+      "models": {
+        "Renault 5": {
+          "segment": "pequeño",
+          "priceFrom": 24584,
+          "versions": [
+            {
+              "name": "Five 40kWh 95cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 95,
+              "power_kw": 70,
+              "battery_kwh": 40,
+              "priceRange": [
+                24584,
+                24584
+              ],
+              "consumption": {
+                "range": 300
+              }
+            },
+            {
+              "name": "Evolution 40kWh 122cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 122,
+              "power_kw": 90,
+              "battery_kwh": 40,
+              "priceRange": [
+                27584,
+                27584
+              ],
+              "consumption": {
+                "range": 312
+              }
+            },
+            {
+              "name": "Techno 52kWh 150cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 150,
+              "power_kw": 110,
+              "battery_kwh": 52,
+              "priceRange": [
+                32584,
+                32584
+              ],
+              "consumption": {
+                "range": 410
+              }
+            }
+          ]
+        },
+        "Renault 4": {
+          "segment": "pequeño",
+          "priceFrom": 29584,
+          "versions": [
+            {
+              "name": "Evolution 40kWh 120cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 120,
+              "power_kw": 88,
+              "battery_kwh": 40,
+              "priceRange": [
+                29584,
+                29584
+              ],
+              "consumption": {
+                "range": 300
+              }
+            },
+            {
+              "name": "Techno 52kWh 150cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 150,
+              "power_kw": 110,
+              "battery_kwh": 52,
+              "priceRange": [
+                34584,
+                34584
+              ],
+              "consumption": {
+                "range": 400
+              }
+            },
+            {
+              "name": "Iconic 52kWh 150cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 150,
+              "power_kw": 110,
+              "battery_kwh": 52,
+              "priceRange": [
+                34584,
+                34584
+              ],
+              "consumption": {
+                "range": 400
+              }
+            }
+          ]
+        },
+        "Clio": {
+          "segment": "pequeño",
+          "priceFrom": 18900,
+          "versions": [
+            {
+              "name": "Evolution TCe 90cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 90,
+              "power_kw": 66,
+              "priceRange": [
+                18900,
+                18900
+              ]
+            },
+            {
+              "name": "ECO-G Evolution 100cv (GLP)",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                20200,
+                20200
+              ]
+            },
+            {
+              "name": "E-Tech full hybrid 145cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 145,
+              "power_kw": 107,
+              "priceRange": [
+                22800,
+                22800
+              ]
+            }
+          ]
+        },
+        "Captur": {
+          "segment": "suv",
+          "priceFrom": 22225,
+          "versions": [
+            {
+              "name": "Evolution TCe 90cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 90,
+              "power_kw": 66,
+              "priceRange": [
+                22225,
+                22225
+              ]
+            },
+            {
+              "name": "ECO-G Techno 100cv (GLP)",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                22900,
+                22900
+              ]
+            },
+            {
+              "name": "E-Tech full hybrid 160cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 160,
+              "power_kw": 118,
+              "priceRange": [
+                27494,
+                27494
+              ]
+            }
+          ]
+        },
+        "Symbioz": {
+          "segment": "suv",
+          "priceFrom": 30120,
+          "versions": [
+            {
+              "name": "Evolution HEV 145cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 145,
+              "power_kw": 107,
+              "priceRange": [
+                30120,
+                30120
+              ]
+            },
+            {
+              "name": "Techno / Alpine HEV 160cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 160,
+              "power_kw": 118,
+              "priceRange": [
+                30884,
+                30884
+              ]
+            }
+          ]
+        },
+        "Austral": {
+          "segment": "suv",
+          "priceFrom": 27324,
+          "versions": [
+            {
+              "name": "Evolution MHEV 150cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                27324,
+                27324
+              ]
+            },
+            {
+              "name": "Techno MHEV 158cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 158,
+              "power_kw": 116,
+              "priceRange": [
+                33136,
+                33136
+              ]
+            },
+            {
+              "name": "E-Tech full hybrid 200cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 200,
+              "power_kw": 147,
+              "priceRange": [
+                35317,
+                35317
+              ]
+            }
+          ]
+        },
+        "Rafale": {
+          "segment": "suv",
+          "priceFrom": 42784,
+          "versions": [
+            {
+              "name": "Techno E-Tech HEV 200cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 200,
+              "power_kw": 147,
+              "priceRange": [
+                42784,
+                42784
+              ]
+            },
+            {
+              "name": "Esprit Alpine PHEV 300cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 300,
+              "power_kw": 221,
+              "priceRange": [
+                48930,
+                48930
+              ],
+              "consumption": {
+                "electric_range": null
+              }
+            }
+          ]
+        },
+        "Megane E-Tech": {
+          "segment": "mediano",
+          "priceFrom": 34539,
+          "versions": [
+            {
+              "name": "Techno 63kWh 218cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "battery_kwh": 63,
+              "priceRange": [
+                34539,
+                34539
+              ],
+              "consumption": {
+                "range": 468
+              }
+            },
+            {
+              "name": "Esprit Alpine 63kWh 220cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 220,
+              "power_kw": 162,
+              "battery_kwh": 63,
+              "priceRange": [
+                42184,
+                42184
+              ],
+              "consumption": {
+                "range": 468
+              }
+            }
+          ]
+        },
+        "Scenic E-Tech": {
+          "segment": "suv",
+          "priceFrom": 35594,
+          "versions": [
+            {
+              "name": "Evolution 60kWh 170cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 170,
+              "power_kw": 125,
+              "battery_kwh": 60,
+              "priceRange": [
+                35594,
+                35594
+              ],
+              "consumption": {
+                "range": 430
+              }
+            },
+            {
+              "name": "Techno 87kWh 218cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "battery_kwh": 87,
+              "priceRange": [
+                46584,
+                46584
+              ],
+              "consumption": {
+                "range": 623
+              }
+            },
+            {
+              "name": "Iconic 87kWh 218cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "battery_kwh": 87,
+              "priceRange": [
+                46584,
+                46584
+              ],
+              "consumption": {
+                "range": 623
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Dacia": {
+      "models": {
+        "Sandero": {
+          "segment": "pequeño",
+          "priceFrom": 13150,
+          "versions": [
+            {
+              "name": "Essential SCe 65 67cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 67,
+              "power_kw": 49,
+              "priceRange": [
+                13150,
+                13150
+              ]
+            },
+            {
+              "name": "Essential TCe 90 91cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 91,
+              "power_kw": 67,
+              "priceRange": [
+                13613,
+                13613
+              ]
+            },
+            {
+              "name": "Essential ECO-G 100 101cv (GLP)",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 101,
+              "power_kw": 74,
+              "priceRange": [
+                13613,
+                13613
+              ]
+            },
+            {
+              "name": "Journey ECO-G 120 Aut. 122cv (GLP)",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 122,
+              "power_kw": 90,
+              "priceRange": [
+                17713,
+                17713
+              ]
+            }
+          ]
+        },
+        "Sandero Stepway": {
+          "segment": "pequeño",
+          "priceFrom": 15480,
+          "versions": [
+            {
+              "name": "Essential TCe 110 110cv",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 110,
+              "power_kw": 81,
+              "priceRange": [
+                15480,
+                15480
+              ]
+            }
+          ]
+        },
+        "Duster": {
+          "segment": "suv",
+          "priceFrom": 19600,
+          "versions": [
+            {
+              "name": "Essential ECO-G 120 122cv (GLP)",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 122,
+              "power_kw": 90,
+              "priceRange": [
+                19600,
+                19600
+              ]
+            },
+            {
+              "name": "Expression 1.2 MHEV 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                22800,
+                22800
+              ]
+            },
+            {
+              "name": "Extreme 1.2 MHEV 4WD 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                27200,
+                27200
+              ]
+            }
+          ]
+        },
+        "Jogger": {
+          "segment": "suv",
+          "priceFrom": 18940,
+          "versions": [
+            {
+              "name": "Essential ECO-G 120 (5pl) 122cv (GLP)",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 122,
+              "power_kw": 90,
+              "priceRange": [
+                18940,
+                18940
+              ]
+            },
+            {
+              "name": "Extreme Hybrid 155 (7pl) 155cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 155,
+              "power_kw": 114,
+              "priceRange": [
+                26950,
+                26950
+              ]
+            }
+          ]
+        },
+        "Spring": {
+          "segment": "pequeño",
+          "priceFrom": 17890,
+          "versions": [
+            {
+              "name": "Expression Electric 45 45cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 45,
+              "power_kw": 33,
+              "battery_kwh": null,
+              "priceRange": [
+                17890,
+                17890
+              ],
+              "consumption": {
+                "range": 225
+              }
+            },
+            {
+              "name": "Extreme Electric 65 65cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 65,
+              "power_kw": 48,
+              "battery_kwh": null,
+              "priceRange": [
+                19890,
+                19890
+              ],
+              "consumption": {
+                "range": 227
+              }
+            }
+          ]
+        }
+      }
+    },
+    "BYD": {
+      "models": {
+        "Dolphin": {
+          "segment": "pequeño",
+          "priceFrom": 23165,
+          "versions": [
+            {
+              "name": "Comfort 60.4kWh 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "battery_kwh": 60.4,
+              "priceRange": [
+                23165,
+                23165
+              ],
+              "consumption": {
+                "range": 427
+              }
+            },
+            {
+              "name": "Design 60.4kWh 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "battery_kwh": 60.4,
+              "priceRange": [
+                25400,
+                25400
+              ],
+              "consumption": {
+                "range": 427
+              }
+            }
+          ]
+        },
+        "Atto 3": {
+          "segment": "suv",
+          "priceFrom": 30455,
+          "versions": [
+            {
+              "name": "EVO Comfort 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "battery_kwh": null,
+              "priceRange": [
+                30455,
+                30455
+              ],
+              "consumption": {
+                "range": 420
+              }
+            },
+            {
+              "name": "EVO Design 204cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 204,
+              "power_kw": 150,
+              "battery_kwh": null,
+              "priceRange": [
+                32500,
+                32500
+              ],
+              "consumption": {
+                "range": 420
+              }
+            }
+          ]
+        },
+        "Seal": {
+          "segment": "mediano",
+          "priceFrom": 40461,
+          "versions": [
+            {
+              "name": "Design RWD 313cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 313,
+              "power_kw": 230,
+              "battery_kwh": null,
+              "priceRange": [
+                40461,
+                40461
+              ],
+              "consumption": {
+                "range": 570
+              }
+            },
+            {
+              "name": "Excellence AWD 530cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 530,
+              "power_kw": 390,
+              "battery_kwh": null,
+              "priceRange": [
+                44200,
+                44200
+              ],
+              "consumption": {
+                "range": 520
+              }
+            }
+          ]
+        },
+        "Seal 6 DM-i": {
+          "segment": "mediano",
+          "priceFrom": 33330,
+          "versions": [
+            {
+              "name": "Boost 183cv PHEV",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 183,
+              "power_kw": 135,
+              "priceRange": [
+                33330,
+                33330
+              ],
+              "consumption": {
+                "electric_range": 70
+              }
+            },
+            {
+              "name": "Comfort 212cv PHEV",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 212,
+              "power_kw": 156,
+              "priceRange": [
+                37120,
+                37120
+              ],
+              "consumption": {
+                "electric_range": 70
+              }
+            }
+          ]
+        },
+        "Seal U": {
+          "segment": "suv",
+          "priceFrom": 37862,
+          "versions": [
+            {
+              "name": "Comfort 71.8kWh 218cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "battery_kwh": 71.8,
+              "priceRange": [
+                37862,
+                37862
+              ],
+              "consumption": {
+                "range": 420
+              }
+            },
+            {
+              "name": "Design 87kWh 218cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "battery_kwh": 87,
+              "priceRange": [
+                42500,
+                42500
+              ],
+              "consumption": {
+                "range": 500
+              }
+            }
+          ]
+        },
+        "Seal U DM-i": {
+          "segment": "suv",
+          "priceFrom": 30990,
+          "versions": [
+            {
+              "name": "Boost / Comfort 218cv PHEV",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 218,
+              "power_kw": 160,
+              "priceRange": [
+                30990,
+                30990
+              ],
+              "consumption": {
+                "electric_range": 80
+              }
+            },
+            {
+              "name": "Design AWD 324cv PHEV",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 324,
+              "power_kw": 238,
+              "priceRange": [
+                38500,
+                38500
+              ],
+              "consumption": {
+                "electric_range": 70
+              }
+            }
+          ]
+        },
+        "Sealion 7": {
+          "segment": "suv",
+          "priceFrom": 39780,
+          "versions": [
+            {
+              "name": "Comfort RWD 313cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 313,
+              "power_kw": 230,
+              "priceRange": [
+                39780,
+                39780
+              ],
+              "consumption": {
+                "range": 482
+              }
+            },
+            {
+              "name": "Design / Excellence 530cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 530,
+              "power_kw": 390,
+              "priceRange": [
+                47990,
+                47990
+              ],
+              "consumption": {
+                "range": 510
+              }
+            }
+          ]
+        },
+        "Han": {
+          "segment": "mediano",
+          "priceFrom": 69990,
+          "versions": [
+            {
+              "name": "Executive AWD 517cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 517,
+              "power_kw": 380,
+              "priceRange": [
+                69990,
+                69990
+              ],
+              "consumption": {
+                "range": 521
+              }
+            }
+          ]
+        },
+        "Tang": {
+          "segment": "suv",
+          "priceFrom": 69090,
+          "versions": [
+            {
+              "name": "Flagship (7pl) 517cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 517,
+              "power_kw": 380,
+              "priceRange": [
+                69090,
+                69090
+              ],
+              "consumption": {
+                "range": 400
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Hyundai": {
+      "models": {
+        "i10": {
+          "segment": "pequeño",
+          "versions": [
+            {
+              "name": "Essence / Klass 63cv",
+              "type": "gasolina",
+              "displacement": "1.0",
+              "power_cv": 63,
+              "power_kw": 46,
+              "priceRange": [
+                17356,
+                17356
+              ]
+            },
+            {
+              "name": "N Line 79cv",
+              "type": "gasolina",
+              "displacement": "1.2",
+              "power_cv": 79,
+              "power_kw": 58,
+              "priceRange": [
+                20686,
+                20686
+              ]
+            },
+            {
+              "name": "N Line 90cv TGDI",
+              "type": "gasolina",
+              "displacement": null,
+              "power_cv": 90,
+              "power_kw": 66,
+              "priceRange": [
+                20686,
+                20686
+              ]
+            }
+          ],
+          "priceFrom": 17356
+        },
+        "i20": {
+          "segment": "pequeño",
+          "versions": [
+            {
+              "name": "Essence / Klass 79cv",
+              "type": "gasolina",
+              "displacement": "1.2",
+              "power_cv": 79,
+              "power_kw": 58,
+              "priceRange": [
+                20407,
+                20407
+              ]
+            },
+            {
+              "name": "Klass / Tecno MHEV 100cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                25486,
+                25486
+              ]
+            }
+          ],
+          "priceFrom": 20407
+        },
+        "i30": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "Klass 96cv",
+              "type": "gasolina",
+              "displacement": "1.5",
+              "power_cv": 96,
+              "power_kw": 71,
+              "priceRange": [
+                26147,
+                26147
+              ]
+            },
+            {
+              "name": "Klass / Tecno MHEV 100cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                28566,
+                28566
+              ]
+            },
+            {
+              "name": "N Line DCT MHEV 140cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 140,
+              "power_kw": 103,
+              "priceRange": [
+                33322,
+                33322
+              ]
+            }
+          ],
+          "priceFrom": 26147
+        },
+        "Bayon": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Klass / Maxx 79cv",
+              "type": "gasolina",
+              "displacement": "1.2",
+              "power_cv": 79,
+              "power_kw": 58,
+              "priceRange": [
+                23252,
+                23252
+              ]
+            },
+            {
+              "name": "Klass / Tecno MHEV 100cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                25521,
+                25521
+              ]
+            }
+          ],
+          "priceFrom": 23252
+        },
+        "Kona": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Maxx / N Line 100cv",
+              "type": "gasolina",
+              "displacement": "1.0T",
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                29161,
+                29161
+              ]
+            },
+            {
+              "name": "Maxx / N Line 115cv",
+              "type": "gasolina",
+              "displacement": "1.0T",
+              "power_cv": 115,
+              "power_kw": 85,
+              "priceRange": [
+                29161,
+                29161
+              ]
+            },
+            {
+              "name": "N Line MHEV 100cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 100,
+              "power_kw": 74,
+              "priceRange": [
+                31711,
+                31711
+              ]
+            },
+            {
+              "name": "Maxx HEV 138cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 138,
+              "power_kw": 101,
+              "priceRange": [
+                34140,
+                34140
+              ]
+            },
+            {
+              "name": "N Line DCT 4WD 180cv",
+              "type": "gasolina",
+              "displacement": "1.6T",
+              "power_cv": 180,
+              "power_kw": 132,
+              "priceRange": [
+                36461,
+                36461
+              ]
+            }
+          ],
+          "priceFrom": 29161
+        },
+        "Tucson": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Klass TGDI 150cv",
+              "type": "gasolina",
+              "displacement": "1.6",
+              "power_cv": 150,
+              "power_kw": 110,
+              "priceRange": [
+                36246,
+                36246
+              ]
+            },
+            {
+              "name": "Maxx 48V Diesel 136cv",
+              "type": "diesel",
+              "displacement": null,
+              "power_cv": 136,
+              "power_kw": 100,
+              "priceRange": [
+                38996,
+                38996
+              ]
+            },
+            {
+              "name": "Klass / Maxx HEV 215cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 215,
+              "power_kw": 158,
+              "priceRange": [
+                39696,
+                39696
+              ]
+            },
+            {
+              "name": "Klass / Maxx PHEV 252cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 252,
+              "power_kw": 185,
+              "priceRange": [
+                43020,
+                43020
+              ]
+            },
+            {
+              "name": "Klass / Maxx PHEV 288cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 288,
+              "power_kw": 212,
+              "priceRange": [
+                43020,
+                43020
+              ]
+            }
+          ],
+          "priceFrom": 36246
+        },
+        "Santa Fe": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Maxx HEV 215cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 215,
+              "power_kw": 158,
+              "priceRange": [
+                55391,
+                55391
+              ]
+            },
+            {
+              "name": "Maxx HEV 239cv",
+              "type": "hibrido",
+              "displacement": null,
+              "power_cv": 239,
+              "power_kw": 176,
+              "priceRange": [
+                55391,
+                55391
+              ]
+            },
+            {
+              "name": "Maxx / Tecno PHEV 253cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 253,
+              "power_kw": 186,
+              "priceRange": [
+                60215,
+                60215
+              ]
+            },
+            {
+              "name": "Maxx / Tecno PHEV 288cv",
+              "type": "phev",
+              "displacement": null,
+              "power_cv": 288,
+              "power_kw": 212,
+              "priceRange": [
+                60215,
+                60215
+              ]
+            }
+          ],
+          "priceFrom": 55391
+        },
+        "IONIQ 5": {
+          "segment": "suv",
+          "versions": [
+            {
+              "name": "Light RWD 170cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 170,
+              "power_kw": 125,
+              "battery_kwh": null,
+              "priceRange": [
+                44065,
+                44065
+              ]
+            },
+            {
+              "name": "Star / Energy RWD 228cv (84kWh)",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 228,
+              "power_kw": 168,
+              "battery_kwh": 84,
+              "priceRange": [
+                47465,
+                47465
+              ]
+            },
+            {
+              "name": "Energy AWD 325cv (84kWh)",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 325,
+              "power_kw": 239,
+              "battery_kwh": 84,
+              "priceRange": [
+                61065,
+                61065
+              ]
+            },
+            {
+              "name": "IONIQ 5 N AWD 650cv",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 650,
+              "power_kw": 478,
+              "battery_kwh": null,
+              "priceRange": [
+                78045,
+                78045
+              ]
+            }
+          ],
+          "priceFrom": 44065
+        },
+        "IONIQ 6": {
+          "segment": "mediano",
+          "versions": [
+            {
+              "name": "Light RWD 170cv (63kWh)",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 170,
+              "power_kw": 125,
+              "battery_kwh": 63,
+              "priceRange": [
+                44045,
+                44045
+              ]
+            },
+            {
+              "name": "Star / N Line RWD 228cv (84kWh)",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 228,
+              "power_kw": 168,
+              "battery_kwh": 84,
+              "priceRange": [
+                52395,
+                52395
+              ]
+            },
+            {
+              "name": "Energy AWD 325cv (84kWh)",
+              "type": "ev",
+              "displacement": null,
+              "power_cv": 325,
+              "power_kw": 239,
+              "battery_kwh": 84,
+              "priceRange": [
+                61045,
+                61045
+              ]
+            }
+          ],
+          "priceFrom": 44045
+        }
+      }
+    }
+  },
+  "disable": {
+    "brands": [],
+    "models": {},
+    "versions": {}
+  }
+}

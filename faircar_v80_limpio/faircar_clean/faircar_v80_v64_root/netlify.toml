@@ -1,0 +1,6 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Nota: las Functions se llaman desde el mismo dominio (same-origin).
+# No se expone CORS "*" para evitar abuso de la API key por sitios externos.
