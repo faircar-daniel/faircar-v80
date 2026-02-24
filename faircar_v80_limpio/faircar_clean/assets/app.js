@@ -265,11 +265,14 @@ async function _imageFileToCanvas(file, maxDim=2000){
     }
 
     // Comunes (financiación)
-    grabPct(/TIN[:\s]*([0-9.,]+)\s*%/, "finance.tin");
-    grabPct(/TAE[:\s]*([0-9.,]+)\s*%/, "finance.tae");
+    grabPct(/T\.?\s*I\.?\s*N\.?[:\s]*([0-9.,]+)\s*%/i, "finance.tin");
+    grabPct(/T\.?\s*A\.?\s*E\.?[:\s]*([0-9.,]+)\s*%/i, "finance.tae");
     grabMoney(/IMPORTE TOTAL DEL CR(?:[ÉE]|E)?DITO[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.principal");
     grabMoney(/IMPORTE TOTAL ADEUDADO[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.total_due");
     grabMoney(/PRECIO TOTAL A PLAZOS[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.total_payable");
+    // Comisiones: a veces aparece como "Gastos de formalización" o "Comisión de apertura"
+    if(!out.finance.open_fee_amount) grabMoney(/(?:COMISI[ÓO]N|GASTOS)\s+DE\s+(?:APERTURA|FORMALIZACI[ÓO]N)[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/i, "finance.open_fee_amount", 0.80);
+
     grabMoney(/IMPORTE TOTAL DESPU(?:[ÉE]|E)S DE LA BONIFICACI(?:[ÓO]|O)N[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "deal.price_if_finance");
     grabMoney(/(?:PVP|P\.?\s*V\.?\s*P\.?)\s*RECOMENDADO[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "deal.pvp_cash");
     grabMoney(/IMPORTE BONIFICACI[ÓO]N[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "deal.finance_discount", 0.85);
@@ -294,11 +297,18 @@ async function _imageFileToCanvas(file, maxDim=2000){
       grabMoney(/(?:CUOTA|CUOTA\s*MENSUAL)[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.monthly_payment");
       grabMoney(/VFG[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.balloon");
       grabInt(/PLAZO[:\s]*([0-9]{2,3})\s*MESES/, "finance.term_months_total");
-      grabInt(/KILOMETRAJE\s*\(?A[ÑN]O\)?[:\s]*([0-9.]{2,3})/, "usage_constraints.km_per_year", 0.8);
+      grabInt(/KILOMETRAJE\s*\(?A[ÑN]O\)?[:\s]*([0-9][0-9.\s]{1,12})\s*KM?/i, "usage_constraints.km_per_year", 0.8);
+      // Si el OCR devuelve "25" pero el documento pone 25.000, corregimos (miles)
+      if(out.usage_constraints.km_per_year && out.usage_constraints.km_per_year.value>0 && out.usage_constraints.km_per_year.value<1000){
+        out.usage_constraints.km_per_year.value = out.usage_constraints.km_per_year.value*1000;
+        out.usage_constraints.km_per_year.confidence = Math.min(out.usage_constraints.km_per_year.confidence, 0.65);
+      }
       grabMoney(/BONIFICACI[ÓO]N\s*TFS[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "deal.finance_discount", 0.85);
       grabMoney(/PRECIO POR FINANCIAR[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.price_to_finance", 0.85);
       grabMoney(/IMPORTE TOTAL DEL CR(?:[ÉE]|E)?DITO[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.principal", 0.95);
-      grabMoney(/COMISI[ÓO]N DE APERTURA FINANCIADA[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/, "finance.open_fee_amount", 0.9);
+      grabMoney(/COMISI[ÓO]N DE APERTURA FINANCIADA[:\s]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/i, "finance.open_fee_amount", 0.9);
+      if(!out.finance.open_fee_amount) grabMoney(/GASTOS\s+DE\s+FORMALIZACI[ÓO]N[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/i, "finance.open_fee_amount", 0.85);
+      if(!out.finance.open_fee_amount) grabMoney(/COMISI[ÓO]N\s+DE\s+APERTURA[^0-9]*([0-9.,]+)\s*(?:EUR|€|EUROS?)/i, "finance.open_fee_amount", 0.80);
       // cuotas: 49 meses suele ser 48 cuotas + última. Inferimos si no viene
       if(!out.finance.installments && out.finance.term_months_total && out.finance.balloon){
         const tm = out.finance.term_months_total.value;
@@ -406,48 +416,80 @@ async function _imageFileToCanvas(file, maxDim=2000){
   }
 
   
-  async function tryParseBudgetViaNetlifyFunction(file, onProgress){
-    const report = (p, msg)=>{ try{ onProgress && onProgress(p, msg); }catch(e){} };
-    const name = (file && file.name) ? file.name.toLowerCase() : "";
-    const isImg = (file && file.type && String(file.type).startsWith("image/")) || /\.(jpe?g|png|webp)$/i.test(name);
-    if(!isImg) return null;
+  
+async function tryParseBudgetViaNetlifyFunction(file, onProgress){
+  const report = (p, msg)=>{ try{ onProgress && onProgress(p, msg); }catch(e){} };
+  const name = (file && file.name) ? file.name.toLowerCase() : "";
+  const isImg = (file && file.type && String(file.type).startsWith("image/")) || /\.(jpe?g|png|webp)$/i.test(name);
+  if(!isImg) return null;
 
-    // Si no existe endpoint (no hay Functions), devolvemos null y seguimos con OCR local
-    const endpoint = "/.netlify/functions/parse-budget";
+  const endpoint = "/.netlify/functions/parse-budget";
 
-    // Reducir tamaño para enviar rápido y barato (evita base64 enorme)
-    report(0.06, "Preparando foto para lectura…");
-    const canvas = await _imageFileToCanvas(file, 1600);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-    const base64 = String(dataUrl||"").split(",")[1] || "";
+  // 1) Prepara una versión "full" y dos recortes (cabecera + pie legal).
+  // Esto sube MUCHO la precisión en TIN/comisiones/kilometraje, porque el pie suele ser letra pequeña.
+  report(0.06, "Preparando foto para lectura…");
+  const full = await _imageFileToCanvas(file, 1800);
 
-    if(!base64 || base64.length < 2000) return null;
+  function cropCanvas(srcCanvas, y0, y1){
+    const h = Math.max(1, Math.floor(y1 - y0));
+    const c = document.createElement("canvas");
+    c.width = srcCanvas.width;
+    c.height = h;
+    const ctx = c.getContext("2d");
+    ctx.drawImage(srcCanvas, 0, y0, srcCanvas.width, h, 0, 0, srcCanvas.width, h);
+    return c;
+  }
 
-    report(0.12, "Enviando a lector IA…");
-    const resp = await fetch(endpoint, {
+  const H = full.height;
+  const header = cropCanvas(full, 0, Math.floor(H*0.38));
+  const footer = cropCanvas(full, Math.floor(H*0.55), H);
+
+  function toB64(c, q){
+    const dataUrl = c.toDataURL("image/jpeg", q);
+    return String(dataUrl||"").split(",")[1] || "";
+  }
+
+  const b64_full = toB64(full, 0.85);
+  const b64_header = toB64(header, 0.88);
+  const b64_footer = toB64(footer, 0.88);
+
+  // Filtro básico: si algo sale muy pequeño, no lo enviamos.
+  const images = [
+    { media_type: "image/jpeg", data: b64_full, hint: "full" },
+    { media_type: "image/jpeg", data: b64_header, hint: "header" },
+    { media_type: "image/jpeg", data: b64_footer, hint: "footer" }
+  ].filter(x => x.data && x.data.length > 2000);
+
+  if(images.length < 1) return null;
+
+  report(0.12, "Enviando a lector IA…");
+  let resp;
+  try{
+    resp = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        media_type: "image/jpeg",
-        data: base64,
+        images,
         filename: file.name || "budget.jpg"
       })
     });
-
-    if(!resp.ok){
-      // No rompemos todo; devolvemos null para fallback a OCR local
-      return null;
-    }
-    const js = await resp.json().catch(()=>null);
-    if(!js) return null;
-    // Formatos soportados:
-    // 1) { ok:true, parsed:{...} }
-    // 2) { ...parsedObject }
-    const parsed = js.parsed || js;
-    // Validar estructura mínima
-    if(parsed && typeof parsed === "object" && (parsed.deal_type || parsed.deal || parsed.finance)) return _normalizeParsedBudgetFromAI(parsed);
+  }catch(e){
     return null;
   }
+
+  if(!resp || !resp.ok){
+    return null; // fallback OCR local
+  }
+
+  const js = await resp.json().catch(()=>null);
+  if(!js) return null;
+
+  const parsed = js.parsed || js;
+  if(parsed && typeof parsed === "object" && (parsed.deal_type || parsed.deal || parsed.finance || parsed.extracted)){
+    return _normalizeParsedBudgetFromAI(parsed);
+  }
+  return null;
+}
 
   function _normalizeParsedBudgetFromAI(parsed){
     // Acepta el formato "schema" del backend o el formato "parseBudgetText"
@@ -508,7 +550,66 @@ async function _imageFileToCanvas(file, maxDim=2000){
     if(parsed.deal && parsed.deal.pvp_cash && !out.deal.pvp_cash) out.deal.pvp_cash = parsed.deal.pvp_cash;
     if(parsed.finance && parsed.finance.term_months_total && !out.finance.term_months_total) out.finance.term_months_total = parsed.finance.term_months_total;
 
-    return out;
+    
+// Post-fix (IA): corrige casos típicos donde el modelo devuelve "25" en vez de "25000"
+// y rescata TIN/comisión si aparecen en el texto detectado.
+(function(){
+  const txt = String(out.textPreview||"");
+  function parseEsNum(str){
+    if(!str) return null;
+    const s = String(str).replace(/\s+/g," ").trim();
+    // 37.322,07 -> 37322.07
+    const cleaned = s.replace(/[^0-9,.-]/g,"");
+    if(!cleaned) return null;
+    // si hay coma, asumimos decimal español
+    let norm = cleaned;
+    if(norm.includes(",")){
+      norm = norm.replace(/\./g,"").replace(",",".");
+    }else{
+      // sin coma: quitar separadores de miles
+      norm = norm.replace(/\./g,"");
+    }
+    const v = Number(norm);
+    return Number.isFinite(v) ? v : null;
+  }
+  function setVal(path, v, isInt=false){
+    if(v===null || v===undefined) return;
+    const keys = path.split(".");
+    let obj = out;
+    for(let i=0;i<keys.length-1;i++) obj = obj[keys[i]];
+    obj[keys[keys.length-1]] = { value: isInt ? Math.round(v) : v, confidence: 0.70 };
+  }
+
+  // km/año
+  const kmObj = out.usage_constraints?.km_per_year;
+  if(kmObj && kmObj.value>0 && kmObj.value<1000){
+    const m = txt.match(/(\d{1,3}(?:[\.\s]\d{3})+)\s*km\/?a(?:ñ|n)o/i) || txt.match(/KILOMETRAJE[^0-9]{0,20}(\d{1,3}(?:[\.\s]\d{3})+)/i);
+    if(m){
+      const v = parseEsNum(m[1]);
+      if(v) setVal("usage_constraints.km_per_year", v, true);
+    }else{
+      // Heurística: 15/20/25 suele ser 15.000/20.000/25.000
+      setVal("usage_constraints.km_per_year", kmObj.value*1000, true);
+    }
+  }
+
+  // TIN (%)
+  const tinObj = out.finance?.tin;
+  if(!tinObj && /\bTIN\b/i.test(txt)){
+    const m = txt.match(/T\.?\s*I\.?\s*N\.?[^0-9]{0,10}([0-9.,]{2,6})\s*%/i);
+    const v = parseEsNum(m ? m[1] : null);
+    if(v!==null) setVal("finance.tin", v, false);
+  }
+
+  // Comisión apertura (€)
+  const feeObj = out.finance?.open_fee_amount;
+  if(!feeObj && /(apertura|formaliz)/i.test(txt)){
+    const m = txt.match(/(?:COMISI[ÓO]N|GASTOS)\s+DE\s+(?:APERTURA|FORMALIZACI[ÓO]N)[^0-9]{0,30}([0-9.\s]+,[0-9]{2})/i);
+    const v = parseEsNum(m ? m[1] : null);
+    if(v!==null) setVal("finance.open_fee_amount", v, false);
+  }
+})();
+return out;
   }
 
 async function extractBudgetTextFromFile(file, onProgress){
