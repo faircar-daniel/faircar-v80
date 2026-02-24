@@ -504,9 +504,13 @@
         // Auto-rellenar marca/modelo/versión si se detectaron
         const vehData = parsed.vehicle || {};
         if(vehData.brand && car){
-          if(!car.brand) car.brand = vehData.brand;
-          if(!car.model) car.model = vehData.model || "";
-          if(!car.version) car.version = vehData.version_text || "";
+          // Solo rellenar si el usuario no lo ha puesto ya
+          if(!car.brand && vehData.brand) car.brand = vehData.brand;
+          if(!car.model && vehData.model) car.model = vehData.model;
+          if(!car.manualVersion && vehData.version_text){
+            car.manualVersion = true;
+            car.versionMeta = { label: "Manual: " + vehData.version_text, manual: true };
+          }
         }
 
         const dtype = String(inpType.value||"").trim().toLowerCase();
