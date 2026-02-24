@@ -504,10 +504,19 @@
         // Auto-rellenar marca/modelo/versión si se detectaron
         const vehData = parsed.vehicle || {};
         if(vehData.brand && car){
-          // Solo rellenar si el usuario no lo ha puesto ya
-          if(!car.brand && vehData.brand) car.brand = vehData.brand;
-          if(!car.model && vehData.model) car.model = vehData.model;
-          if(!car.manualVersion && vehData.version_text){
+          // Resolver marca contra la lista oficial (para que el autocomplete la reconozca)
+          const resolvedBrand = resolveFromList(vehData.brand, allBrands);
+          if(!car.brand && resolvedBrand){
+            car.brand = resolvedBrand;
+            // Resolver modelo contra la lista de la marca
+            if(vehData.model && !car.model){
+              const modList = getModelsForBrand(resolvedBrand);
+              const resolvedModel = resolveFromList(vehData.model, modList);
+              car.model = resolvedModel || vehData.model;
+            }
+          }
+          // Versión siempre como manual (texto libre)
+          if(vehData.version_text && !car.manualVersion){
             car.manualVersion = true;
             car.versionMeta = { label: "Manual: " + vehData.version_text, manual: true };
           }
