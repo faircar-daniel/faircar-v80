@@ -348,10 +348,9 @@
       if(renaultM){ out.vehicle.brand = "Renault"; out.vehicle.model = renaultM[1].trim().replace(/\s+/g," "); }
 
       // Versión: buscar después del modelo si existe (texto entre modelo y siguiente campo)
+      // Versión: buscar después del modelo si existe
       if(out.vehicle.brand && !out.vehicle.version_text){
-        const verM = T.match(/(?:VERSIÓN|VERSION|MODELO)[:\s]+([A-Z0-9][^
-]{5,60}?)(?:
-|COMBUSTIBLE|COLOR|ENTRADA|CUOTA)/);
+        const verM = T.match(/(?:VERSI[O\u00d3]N|MODELO)[:\s]+([A-Z0-9][\s\S]{5,60}?)(?:\r?\n|COMBUSTIBLE|COLOR|ENTRADA|CUOTA)/);
         if(verM) out.vehicle.version_text = verM[1].trim().slice(0,80);
       }
     }catch(e){}
