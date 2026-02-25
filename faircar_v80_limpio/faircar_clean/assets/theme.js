@@ -11,9 +11,10 @@
     try{ localStorage.setItem('FC_THEME', theme); }catch(e){}
     window._fcTheme = theme;
 
-    // Actualizar botón: en noche mostramos ☀️ (pulsa para ir a día), en día mostramos 🌙
-    var btn = document.getElementById('fcThemeToggle');
-    if(btn) btn.textContent = (theme === 'day') ? '🌙' : '☀️';
+    // Actualizar todos los botones toggle que haya en la página
+    document.querySelectorAll('#fcThemeToggle').forEach(function(btn){
+      btn.textContent = (theme === 'day') ? '🌙' : '☀️';
+    });
 
     // Actualizar logo
     var logoSrc = (theme === 'day')
@@ -24,8 +25,14 @@
     });
   }
 
+  // Exponer globalmente para que el onclick del botón lo pueda llamar
+  window.fcToggleTheme = function(){
+    applyTheme(window._fcTheme === 'day' ? 'night' : 'day');
+  };
+
+  window.FairCarTheme = { apply: applyTheme };
+
   function init(){
-    // Leer preferencia guardada, si no hay usar sistema
     var saved;
     try{ saved = localStorage.getItem('FC_THEME'); }catch(e){ saved = null; }
     if(!saved){
@@ -34,13 +41,6 @@
       }catch(e){ saved = 'night'; }
     }
     applyTheme(saved);
-
-    // Click en el toggle
-    document.addEventListener('click', function(e){
-      var btn = e.target && e.target.closest ? e.target.closest('#fcThemeToggle') : null;
-      if(!btn) return;
-      applyTheme(window._fcTheme === 'day' ? 'night' : 'day');
-    });
   }
 
   if(document.readyState === 'loading'){
@@ -49,5 +49,4 @@
     init();
   }
 
-  window.FairCarTheme = { apply: applyTheme };
 })();
