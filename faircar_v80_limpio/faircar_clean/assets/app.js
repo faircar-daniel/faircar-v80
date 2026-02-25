@@ -1,6 +1,6 @@
 // FairCar v1 — client-side only (Netlify-ready)
 (function(){
-  console.log("FairCar build v64");
+  console.log("FairCar build v65");
   const $ = (sel) => document.querySelector(sel);
   const mount = $("#stepMount");
   const btnBack = $("#btnBack");
@@ -486,7 +486,17 @@
       setProg(0.96, "Interpretando datos…");
       const parsed = parseBudgetText(txt);
 
-      // Construir pantalla de revisión
+      // Si tenemos JSON estructurado de Vision, aplicar directamente sin pantalla de revisión
+      if(_lastVisionParsed){
+        const visionData = _lastVisionParsed;
+        _lastVisionParsed = null;
+        _applyVisionJSON(visionData, car, letter);
+        modal.close();
+        render();
+        return;
+      }
+
+      // Construir pantalla de revisión (fallback si no hay JSON)
       const review = document.createElement("div");
       review.innerHTML = `
         <div class="hint" style="border-left:3px solid #f59e0b;padding:10px 12px;border-radius:4px;margin-bottom:8px">⚠️ <strong>Revisa todos los datos antes de confirmar</strong> — especialmente TIN, TAE y cantidades. Las fotos pueden tener errores de lectura. Corrige cualquier valor incorrecto antes de aplicar.</div>
