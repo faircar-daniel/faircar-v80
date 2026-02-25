@@ -1,6 +1,6 @@
 // FairCar v1 — client-side only (Netlify-ready)
 (function(){
-  console.log("FairCar build v63");
+  console.log("FairCar build v64");
   const $ = (sel) => document.querySelector(sel);
   const mount = $("#stepMount");
   const btnBack = $("#btnBack");
