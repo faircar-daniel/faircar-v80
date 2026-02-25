@@ -1,0 +1,19 @@
+{
+  "name": "FairCar — Análisis de coches",
+  "short_name": "FairCar",
+  "description": "Analiza presupuestos de coches y descubre el coste real de tu financiación",
+  "start_url": "/wizard.html",
+  "display": "standalone",
+  "background_color": "#081522",
+  "theme_color": "#0b5fff",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "assets/favicon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/favicon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/favicon/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "categories": ["finance", "utilities"],
+  "lang": "es",
+  "dir": "ltr",
+  "screenshots": []
+}
