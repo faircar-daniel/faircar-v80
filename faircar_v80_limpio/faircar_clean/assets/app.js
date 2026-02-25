@@ -71,6 +71,9 @@
   }
 
   // Extrae texto de imagen usando la Netlify Function (proxy seguro hacia Claude Vision)
+  // Cache temporal del vehículo detectado por Claude Vision
+  let _lastVisionVehicle = null;
+
   async function _extractTextWithClaudeVision(base64Data, mediaType, onProgress){
     onProgress && onProgress(0.3, "Leyendo con IA…");
     const response = await fetch("/.netlify/functions/parse-budget", {
@@ -85,6 +88,9 @@
     const data = await response.json();
     if(data.error) throw new Error(data.error);
     onProgress && onProgress(0.85, "Interpretando datos…");
+    // Guardar vehículo detectado por Claude si viene en la respuesta
+    if(data.vehicle) _lastVisionVehicle = data.vehicle;
+    else _lastVisionVehicle = null;
     return data.text || "";
   }
 
@@ -329,24 +335,30 @@
       }
     }catch(e){}
 
-    // --- Extraer marca/modelo/versión del texto ---
+    // --- Extraer marca/modelo/versión ---
     try{
-      // Toyota: "TOYOTA C-HR+ ELECTRIC..." o "Tu Toyota C-HR..."
-      const toyotaM = T.match(/TOYOTA\s+(C-HR\+?|YARIS(?:\s+CROSS)?|RAV4|COROLLA(?:\s+CROSS)?|AYGO\s*X|BZ4X|CHR)/);
-      if(toyotaM){ out.vehicle.brand = "Toyota"; out.vehicle.model = toyotaM[1].trim().replace(/\s+/g," "); }
+      // Primero usar lo que detectó Claude Vision directamente (más fiable)
+      if(typeof _lastVisionVehicle !== "undefined" && _lastVisionVehicle){
+        if(_lastVisionVehicle.brand) out.vehicle.brand = _lastVisionVehicle.brand;
+        if(_lastVisionVehicle.model) out.vehicle.model = _lastVisionVehicle.model;
+        if(_lastVisionVehicle.version) out.vehicle.version_text = _lastVisionVehicle.version;
+      }
 
-      // Skoda: "Tu Škoda Elroq..."
-      const skodaM = T.match(/(?:SKODA|ŠKODA)\s+(ELROQ|ENYAQ|FABIA|OCTAVIA|KODIAQ|KAROQ|KAMIQ|SCALA|SUPERB|EPIQ)/);
-      if(skodaM){ out.vehicle.brand = "Škoda"; out.vehicle.model = skodaM[1].trim(); }
+      // Fallback: regex si Claude no devolvió vehículo
+      if(!out.vehicle.brand){
+        const toyotaM = T.match(/TOYOTA\s+(C-HR\+?|YARIS(?:\s+CROSS)?|RAV4|COROLLA(?:\s+CROSS)?|AYGO\s*X|BZ4X)/);
+        if(toyotaM){ out.vehicle.brand = "Toyota"; out.vehicle.model = toyotaM[1].trim().replace(/\s+/g," "); }
 
-      // Lynk & Co
-      const lynkBrand = T.match(/LYNK\s*[&Y]?\s*CO/);
-      const lynkMod = lynkBrand ? T.match(/(?:MODELO|MODEL)[:\s]*(0[0-9])/) : null;
-      if(lynkBrand){ out.vehicle.brand = "Lynk & Co"; out.vehicle.model = lynkMod ? lynkMod[1].trim() : "01"; }
+        const skodaM = T.match(/(?:SKODA|ŠKODA)\s+(ELROQ|ENYAQ|FABIA|OCTAVIA|KODIAQ|KAROQ|KAMIQ|SCALA|SUPERB|EPIQ)/);
+        if(skodaM){ out.vehicle.brand = "Škoda"; out.vehicle.model = skodaM[1].trim(); }
 
-      // Renault: "RENAULT RAFALE..."
-      const renaultM = T.match(/RENAULT\s+(RAFALE|ARKANA|AUSTRAL|CAPTUR|CLIO|MEGANE|ESPACE|SCENIC|SYMBIOZ|ZOE|5\s*E-TECH)/);
-      if(renaultM){ out.vehicle.brand = "Renault"; out.vehicle.model = renaultM[1].trim().replace(/\s+/g," "); }
+        const lynkBrand = T.match(/LYNK\s*[&Y]?\s*CO/);
+        const lynkMod = lynkBrand ? T.match(/(?:MODELO|MODEL)[:\s]*(0[0-9])/) : null;
+        if(lynkBrand){ out.vehicle.brand = "Lynk & Co"; out.vehicle.model = lynkMod ? lynkMod[1].trim() : "01"; }
+
+        const renaultM = T.match(/RENAULT\s+(RAFALE|ARKANA|AUSTRAL|CAPTUR|CLIO|MEGANE|ESPACE|SCENIC|SYMBIOZ|ZOE|5\s*E-TECH)/);
+        if(renaultM){ out.vehicle.brand = "Renault"; out.vehicle.model = renaultM[1].trim().replace(/\s+/g," "); }
+      }
 
       // Versión: buscar después del modelo si existe (texto entre modelo y siguiente campo)
       // Versión: buscar después del modelo si existe
@@ -459,12 +471,13 @@
       // Construir pantalla de revisión
       const review = document.createElement("div");
       review.innerHTML = `
-        <div class="hint" style="background:#fff8e1;border-left:3px solid #f59e0b;padding:10px 12px;border-radius:4px;margin-bottom:8px">⚠️ <strong>Revisa todos los datos antes de confirmar</strong> — especialmente TIN, TAE y cantidades. Las fotos pueden tener errores de lectura. Corrige cualquier valor incorrecto antes de aplicar.</div>
+        <div class="hint" style="border-left:3px solid #f59e0b;padding:10px 12px;border-radius:4px;margin-bottom:8px">⚠️ <strong>Revisa todos los datos antes de confirmar</strong> — especialmente TIN, TAE y cantidades. Las fotos pueden tener errores de lectura. Corrige cualquier valor incorrecto antes de aplicar.</div>
         <div class="fc-review-grid"></div>
+        ${(new URLSearchParams(location.search).get("debug")==="1") ? `
         <details class="details" style="margin-top:10px">
-          <summary>Texto detectado (para depurar)</summary>
+          <summary>Texto detectado (debug)</summary>
           <div class="small" style="margin-top:8px;white-space:pre-wrap;word-break:break-word">${_escHtml(parsed.textPreview||"")}</div>
-        </details>
+        </details>` : ""}
         <div class="fc-modal-actions" style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
           <button class="btn ghost" type="button" id="btnImpCancel">Cancelar</button>
           <button class="btn primary" type="button" id="btnImpApply">Aplicar a coche ${letter}</button>
@@ -951,6 +964,68 @@ function taeVerdict(tin, tae){
   if(tae <= 6) return { cls:"good", text:"Razonable." };
   if(tae <= 9) return { cls:"warn", text:"Algo alta." };
   return { cls:"bad", text:"Alta." };
+}
+
+// Semáforo de trato: green/yellow/red + qué negociar
+function dealTrafficLight(car){
+  const tin  = Number(car.tin||0);
+  const tae  = Number(car.tae||0);
+  const openFeePct = Number(car.openFeePct||0);
+  const hasOpenFee = car.hasOpenFee === "yes" && openFeePct > 0;
+  const hasBundles = car._importedBudget && car._importedBudget.totalPayable > 0;
+
+  let score = 0; // 0=verde, 1=amarillo, 2=rojo
+  const tips = [];
+
+  // TAE
+  const tv = taeVerdict(tin, tae);
+  if(tv.cls === "bad")  { score = Math.max(score, 2); }
+  if(tv.cls === "warn") { score = Math.max(score, 1); }
+
+  // Comisión de apertura
+  if(hasOpenFee){
+    if(openFeePct > 2) { score = Math.max(score, 2); tips.push("Negocia la comisión de apertura (" + openFeePct.toFixed(2) + "%) — pide reducirla o eliminarla."); }
+    else if(openFeePct > 0.5) { score = Math.max(score, 1); tips.push("Pregunta si pueden reducir la comisión de apertura."); }
+  }
+
+  // TAE alta
+  if(tae > 9)  tips.push("La TAE (" + tae + "%) es alta. Compara con otras financieras antes de firmar.");
+  else if(tae > 6) tips.push("La TAE (" + tae + "%) es moderada. Puede haber margen de negociación.");
+
+  // Descuento por financiar
+  if(car.financeDiscount && Number(car.financeDiscount) > 0){
+    tips.push("Tienes un descuento por financiar (" + euro(car.financeDiscount) + "). Valora si financiar compensa frente al coste del crédito.");
+  }
+
+  // Sin tips => trato razonable
+  if(tips.length === 0 && tae > 0){
+    tips.push("El trato parece razonable. Revisa siempre las condiciones antes de firmar.");
+  }
+
+  const labels = ["🟢 Trato razonable", "🟡 Revisa algunos puntos", "🔴 Atención — negocia"];
+  const colors = ["#16a34a", "#d97706", "#dc2626"];
+  const bgs    = ["rgba(22,163,74,.12)", "rgba(217,119,6,.12)", "rgba(220,38,38,.12)"];
+  const borders = ["rgba(22,163,74,.3)", "rgba(217,119,6,.3)", "rgba(220,38,38,.3)"];
+
+  return {
+    score,
+    label: labels[score],
+    color: colors[score],
+    bg: bgs[score],
+    border: borders[score],
+    tips
+  };
+}
+
+function renderTrafficLight(car, container){
+  const tl = dealTrafficLight(car);
+  const div = document.createElement("div");
+  div.style.cssText = `background:${tl.bg};border:1px solid ${tl.border};border-radius:10px;padding:14px 16px;margin-top:14px`;
+  div.innerHTML = `
+    <div style="font-size:17px;font-weight:700;margin-bottom:8px;color:${tl.color}">${tl.label}</div>
+    ${tl.tips.map(t => `<div style="display:flex;gap:8px;margin-bottom:6px;font-size:14px"><span style="flex-shrink:0">💡</span><span>${t}</span></div>`).join("")}
+  `;
+  container.appendChild(div);
 }
 
 function euro(n){
@@ -4039,15 +4114,9 @@ function buildSteps(){
 
     const steps = [];
 
-    // Cuestionario inicial (solo si el usuario quiere cambiar perfil o no existe perfil)
+    // Cuestionario inicial — 1 solo paso rápido
     if(!state.skipProfileQuestionnaire){
-      // Paso 1+2 unidos: mostramos primero la parte de "Carga" y debajo "Uso" en la misma pantalla
-      steps.push({id:"use_charge", label:"Uso", fn: stepUsageCharge});
-      steps.push({id:"city", label:"Municipio", fn: stepCityClimate});
-      steps.push({id:"ins", label:"Seguro", fn: stepInsuranceProfile});
-
-      // Guardado automático + resumen (sin preguntar)
-      steps.push({id:"profile_autosave", label:"Perfil", fn: stepProfileAutoSaveSummary});
+      steps.push({id:"perfil_rapido", label:"Tu perfil", fn: stepPerfilRapido});
     }
 
     // Antes del coche: pregunta de coches guardados SOLO si existen coches guardados.
@@ -4805,7 +4874,123 @@ function makeIrpfControl(){
 
   // Paso combinado: primero "carga" (antiguo paso 2) y debajo "uso" (antiguo paso 1)
     // Paso combinado: uso real + carga (precios en desplegable)
-  function stepUsageCharge(){
+  // Paso de perfil rápido: fusiona uso, municipio y seguro en 1 pantalla
+  function stepPerfilRapido(){
+    const step = document.createElement("div");
+    step.className = "step";
+    step.innerHTML = `
+      <h2>Cuéntanos cómo usas el coche</h2>
+      <p class="hint">Con estos datos estimamos el coste real mensual. Son orientativos y puedes cambiarlos después.</p>
+    `;
+
+    // --- KM/AÑO ---
+    const kmRow = document.createElement("div");
+    kmRow.className = "row";
+    kmRow.style.marginBottom = "6px";
+    const kmLabel = document.createElement("div"); kmLabel.className = "label"; kmLabel.textContent = "Kilómetros al año";
+    const kmVal = document.createElement("div"); kmVal.className = "value"; kmVal.textContent = `${(state.kmYear||15000).toLocaleString("es-ES")} km`;
+    kmRow.appendChild(kmLabel); kmRow.appendChild(kmVal);
+    step.appendChild(kmRow);
+
+    const kmSlider = document.createElement("input");
+    kmSlider.type = "range"; kmSlider.min = "5000"; kmSlider.max = "60000"; kmSlider.step = "1000";
+    kmSlider.value = String(state.kmYear || 15000); kmSlider.className = "slider";
+    kmSlider.addEventListener("input", () => { state.kmYear = Number(kmSlider.value); kmVal.textContent = `${Number(kmSlider.value).toLocaleString("es-ES")} km`; });
+    step.appendChild(kmSlider);
+
+    // --- CIUDAD/CARRETERA ---
+    const mixRow = document.createElement("div");
+    mixRow.className = "row"; mixRow.style.marginTop = "14px";
+    const mixLabel = document.createElement("div"); mixLabel.className = "label"; mixLabel.textContent = "Reparto uso";
+    const mixVal = document.createElement("div"); mixVal.className = "value"; mixVal.id = "pfCVal"; mixVal.textContent = `Ciudad ${state.cityPct}% · Carretera ${100-state.cityPct}%`;
+    mixRow.appendChild(mixLabel); mixRow.appendChild(mixVal);
+    step.appendChild(mixRow);
+
+    const mixSlider = document.createElement("input");
+    mixSlider.type = "range"; mixSlider.min = "0"; mixSlider.max = "100"; mixSlider.step = "10";
+    mixSlider.value = String(state.cityPct||50); mixSlider.className = "slider";
+    mixSlider.addEventListener("input", () => {
+      state.cityPct = Number(mixSlider.value);
+      mixVal.textContent = `Ciudad ${state.cityPct}% · Carretera ${100-state.cityPct}%`;
+    });
+    step.appendChild(mixSlider);
+
+    // --- CARGADOR (solo relevante para EV/PHEV) ---
+    const chargeTitle = document.createElement("div");
+    chargeTitle.className = "section-title"; chargeTitle.style.marginTop = "16px";
+    chargeTitle.textContent = "¿Tienes cargador en casa? (para EV/PHEV)";
+    step.appendChild(chargeTitle);
+
+    const chargeGrid = document.createElement("div");
+    chargeGrid.className = "grid2";
+    chargeGrid.appendChild(cardChoice("Sí, en casa", "kWh casa editable.", "🏠⚡", state.chargeMode==="home", ()=>{ state.chargeMode="home"; render(); }));
+    chargeGrid.appendChild(cardChoice("No, público", "kWh público editable.", "🛣️⚡", state.chargeMode==="street", ()=>{ state.chargeMode="street"; render(); }));
+    step.appendChild(chargeGrid);
+
+    // --- AJUSTES AVANZADOS (desplegable) ---
+    const det = document.createElement("details");
+    det.className = "fc-details";
+    det.style.marginTop = "16px";
+    const sum = document.createElement("summary");
+    sum.innerHTML = `<span style="font-weight:600">Ajustes avanzados</span> <span class="smallmuted">Provincia, seguro, precios energía</span>`;
+    det.appendChild(sum);
+
+    const body = document.createElement("div");
+    body.className = "fc-details-body";
+    body.style.paddingTop = "12px";
+
+    // Provincia
+    const PROVINCIAS = ["Álava","Albacete","Alicante","Almería","Asturias","Ávila","Badajoz","Barcelona","Burgos","Cáceres","Cádiz","Cantabria","Castellón","Ciudad Real","Córdoba","Cuenca","Girona","Granada","Guadalajara","Gipuzkoa","Huelva","Huesca","Illes Balears","Jaén","A Coruña","La Rioja","Las Palmas","León","Lleida","Lugo","Madrid","Málaga","Murcia","Navarra","Ourense","Palencia","Pontevedra","Salamanca","Santa Cruz de Tenerife","Segovia","Sevilla","Soria","Tarragona","Teruel","Toledo","Valencia","Valladolid","Bizkaia","Zamora","Zaragoza","Ceuta","Melilla"];
+    const sel = document.createElement("select"); sel.className = "input";
+    const opt0 = document.createElement("option"); opt0.value=""; opt0.textContent="Provincia…"; sel.appendChild(opt0);
+    PROVINCIAS.forEach(p => { const o=document.createElement("option"); o.value=p; o.textContent=p; if(state.city===p) o.selected=true; sel.appendChild(o); });
+    sel.addEventListener("change", () => { state.city = sel.value; state.climate = computeClimate(sel.value); });
+    body.appendChild(field("Provincia (IVTM + clima)", sel));
+
+    // Años carnet
+    const yearsIn = input("number", typeof state.licenseYears==="number" ? state.licenseYears : 8, "Ej: 8");
+    yearsIn.min="0"; yearsIn.max="60"; yearsIn.step="1";
+    yearsIn.addEventListener("input", ()=>{ state.licenseYears = clamp(Number(yearsIn.value||8),0,60); });
+    body.appendChild(field("Años con carnet (seguro)", yearsIn));
+
+    // Tipo seguro
+    const segSel = document.createElement("select"); segSel.className = "input";
+    [["third","A terceros"],["full_excess","Todo riesgo con franquicia"],["full","Todo riesgo"]].forEach(([v,l]) => {
+      const o=document.createElement("option"); o.value=v; o.textContent=l; if(state.insuranceCover===v) o.selected=true; segSel.appendChild(o);
+    });
+    segSel.addEventListener("change", ()=>{ state.insuranceCover = segSel.value; });
+    body.appendChild(field("Tipo de seguro", segSel));
+
+    // Precios energía
+    const g=input("number", state.priceGas, ""); g.step="0.01";
+    g.addEventListener("input", ()=>{ state.priceGas = Number(g.value||0); });
+    body.appendChild(field("Gasolina (€/L)", g));
+
+    const d=input("number", state.priceDiesel, ""); d.step="0.01";
+    d.addEventListener("input", ()=>{ state.priceDiesel = Number(d.value||0); });
+    body.appendChild(field("Diésel (€/L)", d));
+
+    const kwh = input("number", state.chargeMode==="home" ? state.priceKwhHome : state.priceKwhStreet, ""); kwh.step="0.01";
+    kwh.addEventListener("input", ()=>{
+      if(state.chargeMode==="home") state.priceKwhHome = Number(kwh.value||0);
+      else state.priceKwhStreet = Number(kwh.value||0);
+    });
+    body.appendChild(field("kWh (€/kWh)", kwh));
+
+    det.appendChild(body);
+    step.appendChild(det);
+    mount.appendChild(step);
+
+    // Al avanzar: guardar perfil automáticamente
+    return {
+      onNext: () => {
+        state.skipProfileQuestionnaire = true;
+        try{ saveProfile({ kmYear: state.kmYear, cityPct: state.cityPct, chargeMode: state.chargeMode, city: state.city, climate: state.climate, licenseYears: state.licenseYears, insuranceCover: state.insuranceCover, ageGroup: state.ageGroup, garage: state.garage, priceGas: state.priceGas, priceDiesel: state.priceDiesel, priceKwhHome: state.priceKwhHome, priceKwhStreet: state.priceKwhStreet, postalCode: state.postalCode, includeTires: state.includeTires }); }catch(e){}
+      }
+    };
+  }
+
+    function stepUsageCharge(){
     const step=document.createElement("div");
     step.className="step";
     step.innerHTML = `
@@ -5264,6 +5449,24 @@ mount.appendChild(step);
         const file = inputEl.files && inputEl.files[0];
         if(!file) return;
         inputEl.value = "";
+
+        // Aviso de privacidad — solo una vez por sesión
+        const privacyOk = (() => { try{ return sessionStorage.getItem("fc_privacy_ok")==="1"; }catch(e){ return false; } })();
+        if(!privacyOk){
+          const ok = window.confirm("📋 Aviso de privacidad\n\nLa foto se envía a una IA para leer los datos del presupuesto. No se guarda la imagen.\n\nRecomendamos tapar datos personales de la foto (nombre, DNI, dirección) antes de subir.\n\n¿Continuar?");
+          if(!ok) return;
+          try{ sessionStorage.setItem("fc_privacy_ok","1"); }catch(e){}
+        }
+
+        // Límite: 5 importaciones por sesión
+        let importCount = 0;
+        try{ importCount = parseInt(sessionStorage.getItem("fc_import_count")||"0",10)||0; }catch(e){}
+        if(importCount >= 5){
+          alert("Has alcanzado el límite de 5 importaciones por sesión.\nRecarga la página para continuar.");
+          return;
+        }
+        try{ sessionStorage.setItem("fc_import_count", String(importCount+1)); }catch(e){}
+
         const statusEl = importBox.querySelector("#impStatus_" + car.letter);
         if(statusEl){ statusEl.style.display="block"; statusEl.textContent="Leyendo presupuesto…"; }
         const onProg = (p, msg)=>{ if(statusEl) statusEl.textContent = msg || "Procesando…"; };
@@ -7436,6 +7639,17 @@ recalc();
     $("#carSingleBreakdown").innerHTML = breakdownHTML(A.pieces, A.meta, car);
     $("#singleHowCalc").innerHTML = howCalcHTML();
 
+    // Semáforo de trato
+    const singleCard = resultsSingleCard.querySelector(".col");
+    if(singleCard && (Number(car.tae||0) > 0 || Number(car.openFeePct||0) > 0)){
+      const existingTL = singleCard.querySelector(".fc-traffic-light");
+      if(existingTL) existingTL.remove();
+      const tlWrap = document.createElement("div");
+      tlWrap.className = "fc-traffic-light";
+      renderTrafficLight(car, tlWrap);
+      singleCard.appendChild(tlWrap);
+    }
+
     resultsSingleCard.style.display = "block";
   }
 
@@ -7506,6 +7720,22 @@ recalc();
     $("#carBQuota").textContent = `${B.meta.fin.mode==="cash" ? "Pago equivalente" : "Cuota mensual"}: ${euro(B.meta.fin.loanMonthly)}`;
 $("#carABreakdown").innerHTML = breakdownHTML(A.pieces, A.meta, state.carA);
     $("#carBBreakdown").innerHTML = breakdownHTML(B.pieces, B.meta, state.carB);
+
+    // Semáforo en comparativa
+    try{
+      ["A","B"].forEach(letter => {
+        const car = letter === "A" ? state.carA : state.carB;
+        const col = document.querySelector(letter === "A" ? ".two-cols .col:first-child" : ".two-cols .col:last-child");
+        if(col && (Number(car.tae||0) > 0 || Number(car.openFeePct||0) > 0)){
+          const existing = col.querySelector(".fc-traffic-light");
+          if(existing) existing.remove();
+          const tlWrap = document.createElement("div");
+          tlWrap.className = "fc-traffic-light";
+          renderTrafficLight(car, tlWrap);
+          col.appendChild(tlWrap);
+        }
+      });
+    }catch(e){}
 
     // Selector de prioridad (perfil de decisión)
     try{
