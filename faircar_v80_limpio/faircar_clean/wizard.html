@@ -29,14 +29,7 @@
     </a>
 
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-      <div class="theme-switch" aria-label="Cambiar colores de la página">
-      <span class="theme-label">Colores</span>
-      <div class="theme-dots">
-        <button class="theme-dot" type="button" data-theme-pick="night" aria-label="Modo noche"></button>
-        <button class="theme-dot" type="button" data-theme-pick="day" aria-label="Modo día"></button>
-        <button class="theme-dot" type="button" data-theme-pick="ocean" aria-label="Modo océano"></button>
-      </div>
-    </div>
+      <button id="fcThemeToggle" type="button" aria-label="Cambiar tema" title="Cambiar tema" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px 6px;border-radius:8px;line-height:1;opacity:.8;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.8">☀️</button>
       <button class="btn ghost" id="btnChangeProfile" style="padding:8px 10px;border-radius:999px;font-size:12px;font-weight:800;display:none">Cambiar perfil</button>
       <div class="pill" id="progressPill">Paso 1/5</div>
     </div>
@@ -159,7 +152,7 @@
 
     <section class="footerline">
       <div class="small">
-        Nota: FairCar v1 (build v63) usa estimaciones coherentes y editables. No sustituye asesoramiento profesional.
+        Nota: FairCar v1 (build v39) usa estimaciones coherentes y editables. No sustituye asesoramiento profesional.
       </div>
     </section>
   </main>
