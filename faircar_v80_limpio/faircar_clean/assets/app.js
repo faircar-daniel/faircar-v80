@@ -73,7 +73,6 @@
   // Extrae texto de imagen usando la Netlify Function (proxy seguro hacia Claude Vision)
   // Cache temporal del vehículo detectado por Claude Vision
   let _lastVisionVehicle = null;
-  let _lastVisionParsed  = null; // JSON estructurado completo de la última importación
 
   async function _extractTextWithClaudeVision(base64Data, mediaType, onProgress){
     onProgress && onProgress(0.3, "Leyendo con IA…");
@@ -89,11 +88,9 @@
     const data = await response.json();
     if(data.error) throw new Error(data.error);
     onProgress && onProgress(0.85, "Interpretando datos…");
-    // Guardar vehículo y JSON completo
+    // Guardar vehículo detectado por Claude si viene en la respuesta
     if(data.vehicle) _lastVisionVehicle = data.vehicle;
     else _lastVisionVehicle = null;
-    if(data.parsed) _lastVisionParsed = data.parsed;
-    else _lastVisionParsed = null;
     return data.text || "";
   }
 
@@ -256,38 +253,23 @@
     // Toyota TFS
     if(template==="toyota_tfs"){
       out.deal.deal_type = "pcp";
-      // Cuota y entrada básica
       grabMoney(/ENTRADA INICIAL[:\s]*([0-9.,]+)\s*EUR/, "finance.down_payment_cash");
       grabMoney(/CUOTA[:\s]*([0-9.,]+)\s*EUR/, "finance.monthly_payment");
-      // VFG / última cuota
+      grabMoney(/VFG[^0-9]*([0-9.,]+)\s*EUR/, "finance.balloon");
       grabMoney(/VFG\s*O\s*[ÚU]LTIMA\s*CUOTA\s*([0-9.,]+)\s*EUR/, "finance.balloon", 0.95);
-      grabMoney(/VFG[^0-9]{0,10}([0-9.,]+)\s*EUR/, "finance.balloon", 0.85);
       grabMoney(/VALOR\s*FUTURO\s*GARANTIZADO[^0-9]{0,20}([0-9.,]+)\s*EUR/, "finance.balloon", 0.9);
-      // Plazo y km
       grabInt(/PLAZO[:\s]*([0-9]{2,3})\s*MESES/, "finance.term_months_total");
       grabInt(/KILOMETRAJE\s*\(?A[ÑN]O\)?[:\s]*([0-9][0-9.]*[0-9])\s*KM/, "usage_constraints.km_per_year", 0.9);
-      grabInt(/([0-9][0-9.]*[0-9])\s*KM\b/, "usage_constraints.km_per_year", 0.7);
-      // PVP real: "Precio por financiar" es el más fiable en TFS
-      grabMoney(/PRECIO\s*POR\s*FINANCIAR[:\s]*([0-9.,]+)\s*EUR/, "deal.pvp_cash", 0.95);
-      // Bonificación TFS = precio oferta con descuento ya aplicado (NO es el PVP ni el descuento)
-      // Solo usarla como pvp_cash si no encontramos precio por financiar
-      if(!out.deal.pvp_cash){
-        grabMoney(/BONIFICACI[ÓO]N\s*TFS\s*([0-9][0-9.,]+)\s*EUR/, "deal.pvp_cash", 0.75);
-      }
-      // Servicios/extras que suman o restan — NO mapear como descuento por financiar
-      // El descuento real viene de la diferencia PVP - precio oferta, no de la bonificación TFS
+      grabInt(/KILOMETRAJE\s*\(?A[ÑN]O\)?[:\s]*([0-9][0-9.]*[0-9])/, "usage_constraints.km_per_year", 0.8);
+      grabMoney(/BONIFICACI[ÓO]N\s*TFS\s*([0-9][0-9.,]+)\s*EUR/, "deal.pvp_cash", 0.9);
+      grabMoney(/BONIFICACI[ÓO]N\s*TFS[^0-9]*([0-9.,]+)\s*EUR/, "deal.finance_discount", 0.85);
+      grabMoney(/PRECIO POR FINANCIAR[:\s]*([0-9.,]+)\s*EUR/, "finance.price_to_finance", 0.85);
       grabMoney(/PRECIO\s*TOTAL\s*A\s*PLAZOS[:\s]*([0-9.,]+)\s*EUR/, "finance.total_payable", 0.95);
-      grabMoney(/IMPORTE\s*A\s*FINANCIAR[:\s]*([0-9.,]+)\s*EUR/, "finance.price_to_finance", 0.95);
+      grabMoney(/IMPORTE\s*A\s*FINANCIAR[:\s]*([0-9.,]+)\s*EUR/, "finance.price_to_finance", 0.9);
+      grabMoney(/TOTAL\s*CONTADO[:\s]*([0-9.,]+)\s*EUR/, "finance.down_payment_cash", 0.7);
       grabMoney(/IMPORTE TOTAL DEL CR[ÉE]DITO[:\s]*([0-9.,]+)\s*EUR/, "finance.principal", 0.95);
-      // Entrada real (puede diferir de entrada inicial — usar la de letra pequeña si existe)
-      grabMoney(/ENTRADA[:\s]*([0-9.,]+)\s*EUR/, "finance.down_payment_cash", 0.7);
-      // Comisión apertura: "Gastos de formalización" en Toyota = comisión apertura
-      grabMoney(/GASTOS\s*DE\s*FORMALIZACI[ÓO]N[^0-9]*([0-9.,]+)\s*EUR/, "finance.open_fee_amount", 0.9);
-      grabMoney(/COMISI[ÓO]N\s*DE\s*APERTURA\s*FINANCIADA[:\s]*([0-9.,]+)\s*EUR/, "finance.open_fee_amount", 0.95);
-      // TAE y TIN explícitos en letra pequeña
-      grabPct(/TIN[:\s]*([0-9.,]+)\s*%/, "finance.tin", 0.95);
-      grabPct(/TAE[:\s]*([0-9.,]+)\s*%/, "finance.tae", 0.95);
-      // Cuotas: 49 meses = 48 cuotas + última cuota
+      grabMoney(/COMISI[ÓO]N DE APERTURA FINANCIADA[:\s]*([0-9.,]+)\s*EUR/, "finance.open_fee_amount", 0.9);
+      // cuotas: 49 meses suele ser 48 cuotas + última. Inferimos si no viene
       if(!out.finance.installments && out.finance.term_months_total && out.finance.balloon){
         const tm = out.finance.term_months_total.value;
         out.finance.installments = { value: Math.max(1, tm-1), confidence: 0.70 };
@@ -560,35 +542,44 @@
         const asNum = (s)=>{ const v=_parseEsNumber(s); return (v===null)?0:v; };
         const asInt = (s)=>{ const v=Math.round(Number(String(s).replace(/[^\d-]/g,""))); return Number.isFinite(v)?v:0; };
 
-        // Si tenemos JSON estructurado de Vision, usarlo directamente
-        if(_lastVisionParsed){
-          _applyVisionJSON(_lastVisionParsed, car, letter);
-          _lastVisionParsed = null;
-          modal.close();
-          render();
-          return;
-        }
-
-        // Fallback: aplicar desde los campos del formulario de revisión
+        // Auto-rellenar marca/modelo/versión si se detectaron
         const vehData = parsed.vehicle || {};
         if(vehData.brand && car){
-          _loadVersionFromBudget(car, { brand: vehData.brand, model: vehData.model, version: vehData.version_text });
+          // Resolver marca contra la lista oficial (para que el autocomplete la reconozca)
+          const resolvedBrand = resolveFromList(vehData.brand, allBrands);
+          if(!car.brand && resolvedBrand){
+            car.brand = resolvedBrand;
+            // Resolver modelo contra la lista de la marca
+            if(vehData.model && !car.model){
+              const modList = getModelsForBrand(resolvedBrand);
+              const resolvedModel = resolveFromList(vehData.model, modList);
+              car.model = resolvedModel || vehData.model;
+            }
+          }
+          // Versión siempre como manual (texto libre)
+          if(vehData.version_text && !car.manualVersion){
+            car.manualVersion = true;
+            car.versionMeta = { label: "Manual: " + vehData.version_text, manual: true };
+          }
         }
 
         const dtype = String(inpType.value||"").trim().toLowerCase();
-        const pvp  = asNum(inpPvp.value);
-        const pf   = asNum(inpPf.value);
+        const pvp = asNum(inpPvp.value);
+        const pf  = asNum(inpPf.value);
         const disc = asNum(inpDisc.value);
+
         const term = asInt(inpTerm.value);
         const inst = asInt(inpInst.value);
         const cuota = asNum(inpCuot.value);
-        const down  = asNum(inpDown.value);
-        const bal   = asNum(inpBal.value);
-        const tin   = asNum(inpTin.value);
-        const tae   = asNum(inpTae.value);
+        const down = asNum(inpDown.value);
+        const bal = asNum(inpBal.value);
+
+        const tin = asNum(inpTin.value);
+        const tae = asNum(inpTae.value);
         const openPct = asNum(inpOpenPct.value);
         const openAmt = asNum(inpOpenAmt.value);
 
+        // Guardar en coche
         if(dtype==="cash"){
           car.financeEnabled = "no";
           car.pvpCash = pvp || car.pvpCash;
@@ -596,26 +587,65 @@
           car.pvpKnown = "yes";
         } else {
           car.financeEnabled = "yes";
-          if(bal>0){ car.financeMode="flex"; car.flexGmv=bal; car.installments=inst>0?inst:0; }
-          else { car.financeMode="linear"; car.flexGmv=0; car.installments=0; }
+          // Si hay última cuota -> PCP/flexible
+          if(bal>0){
+            car.financeMode = "flex";
+            car.flexGmv = bal;
+            car.installments = inst>0 ? inst : 0;
+          } else {
+            car.financeMode = "linear";
+            car.flexGmv = 0;
+            car.installments = 0;
+          }
           if(cuota>0) car.monthlyPayment = cuota;
           car.downPayment = down;
+
+          // dto por financiar
           car.financeDiscount = disc;
-          if(pvp>0){ car.pvpCash=pvp; car.pvpCashManual=pvp; car.pvpKnown="yes"; }
-          if(pf>0) car.priceFinanced = pf;
-          if(tin>0) car.tin = tin;
-          if(openPct>0){ car.hasOpenFee="yes"; car.openFeePct=openPct; }
-          else if(openAmt>0){
-            const base = Math.max(1,(pf>0?pf:(pvp>0?pvp:0))-down);
-            car.hasOpenFee="yes"; car.openFeePct=Math.round((openAmt/base)*10000)/100;
+          // PVP / precio si financias
+          if(pvp>0){
+            car.pvpCash = pvp;
+            car.pvpCashManual = pvp;
+            car.pvpKnown = "yes";
           }
-          if(letter==="A" && term>0) state.termMonths=normalizeTermMonths(term);
+          if(pf>0){
+            car.priceFinanced = pf;
+          }
+          // tin / tae
+          if(tin>0) car.tin = tin;
+          if(openPct>0){
+            car.hasOpenFee = "yes";
+            car.openFeePct = openPct;
+          } else if(openAmt>0){
+            // Derivar pct aprox si es posible
+            const base = Math.max(1, (pf>0?pf:(pvp>0?pvp:0)) - down);
+            const pct = (openAmt/base)*100;
+            car.hasOpenFee = "yes";
+            car.openFeePct = Math.round(pct*100)/100;
+          }
+          // Plazo global: si estamos en coche A, lo adoptamos
+          if(letter==="A" && term>0){
+            state.termMonths = normalizeTermMonths(term);
+          }
         }
+
+        // km/año si viene
         const kmY = asInt(inpKmY.value);
-        if(letter==="A" && kmY>0) state.kmYear = kmY;
-        car._importedBudget = { template: parsed.template, totalPayable: asNum(inpTotPlazos.value), principal: asNum(inpPrin.value), tae: tae, notes: parsed.validations?.checks||[] };
+        if(letter==="A" && kmY>0){
+          state.kmYear = kmY;
+        }
+
+        // guardar raw para debug
+        car._importedBudget = {
+          template: parsed.template,
+          totalPayable: asNum(inpTotPlazos.value),
+          principal: asNum(inpPrin.value),
+          tae: tae,
+          notes: parsed.validations?.checks || []
+        };
 
         modal.close();
+        toast("Presupuesto importado. Revisa que todo cuadre ✅");
         render();
       });
 
@@ -844,153 +874,6 @@ function getModelData(brand, model){
   }
   return null;
 }
-// Carga silenciosa de versión desde presupuesto importado
-// Si existe en la DB: la carga. Si no: crea versión de usuario en localStorage sin avisar.
-function _loadVersionFromBudget(car, vehData){
-  if(!vehData || !vehData.brand) return;
-  try{
-    const brand = resolveFromList(vehData.brand, Object.keys(brandModels||{})) || vehData.brand;
-    const models = getModelsForBrand(brand);
-    const model  = resolveFromList(vehData.model||"", models) || vehData.model || "";
-
-    // Aplicar marca y modelo al coche
-    if(brand) car.brand = brand;
-    if(model) car.model = model;
-
-    // Combustible
-    if(vehData.combustible){
-      const fuelMap = { gasolina:"gasoline", diesel:"diesel", hibrido:"hev", phev:"phev", electrico:"ev", eléctrico:"ev", electric:"ev", hybrid:"hev" };
-      const fuel = fuelMap[String(vehData.combustible).toLowerCase()] || null;
-      if(fuel) car.fuel = fuel;
-    }
-
-    // KM/año del presupuesto → actualizar perfil silenciosamente
-    if(vehData.km_anio && Number(vehData.km_anio) > 0){
-      state.kmYear = Number(vehData.km_anio);
-    }
-
-    // Buscar versión en DB
-    const versionText = vehData.version || "";
-    if(versionText){
-      // Intentar match exacto o parcial en la DB
-      let matchedVersion = null;
-      try{
-        if(HAS_V3 && typeof window.getVersionsForModel === "function"){
-          const versions = window.getVersionsForModel(brand, model) || [];
-          const normV = (s) => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
-          const nTarget = normV(versionText);
-          matchedVersion = versions.find(v => normV(v.label||v) === nTarget)
-                        || versions.find(v => nTarget.includes(normV(v.label||v)) || normV(v.label||v).includes(nTarget));
-        }
-      }catch(e){}
-
-      if(matchedVersion){
-        // Versión encontrada en DB — cargar silenciosamente
-        car.manualVersion = false;
-        car.versionMeta = typeof matchedVersion === "object" ? matchedVersion : { label: matchedVersion };
-      } else {
-        // Versión nueva — crear y guardar silenciosamente en localStorage
-        const userVersion = {
-          label: versionText,
-          manual: true,
-          source: "presupuesto",
-          brand: brand,
-          model: model,
-          fuel: car.fuel || null,
-          cv: vehData.cv || null,
-          price: null // se rellenará con PVP del presupuesto
-        };
-        // Guardar en pool de versiones de usuario
-        try{
-          const key = "fc_user_versions";
-          let pool = [];
-          try{ pool = JSON.parse(localStorage.getItem(key)||"[]"); }catch(e){}
-          // Evitar duplicados
-          const exists = pool.find(v => v.brand===brand && v.model===model && v.label===versionText);
-          if(!exists){ pool.push(userVersion); localStorage.setItem(key, JSON.stringify(pool)); }
-        }catch(e){}
-        car.manualVersion = true;
-        car.versionMeta = userVersion;
-      }
-    }
-  }catch(e){ /* silencioso */ }
-}
-
-// Aplicar JSON estructurado de Vision directamente al coche y al estado
-function _applyVisionJSON(parsed, car, letter){
-  if(!parsed) return false;
-  const fin = parsed.financiacion || {};
-  const veh = parsed.vehiculo || {};
-  let applied = false;
-
-  // Vehículo (silencioso)
-  _loadVersionFromBudget(car, veh.marca || veh.modelo ? {
-    brand: veh.marca, model: veh.modelo, version: veh.version,
-    combustible: veh.combustible, cv: veh.cv, km_anio: veh.km_anio
-  } : null);
-
-  // PVP
-  if(fin.pvp_contado > 0){
-    car.pvpCash = fin.pvp_contado;
-    car.pvpCashManual = fin.pvp_contado;
-    car.pvpKnown = "yes";
-    applied = true;
-  }
-
-  // Financiación
-  if(fin.cuota_mensual > 0){ car.monthlyPayment = fin.cuota_mensual; applied = true; }
-  if(fin.entrada > 0){ car.downPayment = fin.entrada; applied = true; }
-  if(fin.tin > 0){ car.tin = fin.tin; applied = true; }
-  if(fin.tae > 0){ car.tae = fin.tae; applied = true; }
-
-  // VFG / PCP
-  if(fin.vfg > 0){
-    car.financeMode = "flex";
-    car.flexGmv = fin.vfg;
-    car.financeEnabled = "yes";
-    applied = true;
-  } else if(fin.cuota_mensual > 0){
-    car.financeMode = "linear";
-    car.financeEnabled = "yes";
-  }
-
-  // Cuotas e installments
-  if(fin.num_cuotas > 0) car.installments = fin.num_cuotas;
-  if(fin.plazo_meses > 0 && letter === "A") state.termMonths = normalizeTermMonths(fin.plazo_meses);
-
-  // Comisión apertura
-  if(fin.apertura_eur > 0 || fin.apertura_pct > 0){
-    car.hasOpenFee = "yes";
-    if(fin.apertura_pct > 0) car.openFeePct = fin.apertura_pct;
-    if(fin.apertura_eur > 0){
-      car.openFeeAmount = fin.apertura_eur;
-      if(!fin.apertura_pct && fin.importe_financiar > 0){
-        car.openFeePct = Math.round((fin.apertura_eur / fin.importe_financiar) * 10000) / 100;
-      }
-    }
-    applied = true;
-  }
-
-  // KM/año
-  if(veh.km_anio > 0) state.kmYear = veh.km_anio;
-
-  // Extras / seguros
-  if(Array.isArray(parsed.extras) && parsed.extras.length > 0){
-    car._extras = parsed.extras;
-  }
-
-  // Guardar raw para debug y semáforo
-  car._importedBudget = {
-    template: "vision_json",
-    totalPayable: fin.total_plazos || 0,
-    principal: fin.total_credito || 0,
-    tae: fin.tae || 0,
-    notes: []
-  };
-
-  return applied;
-}
-
 const motorMap = { gasolina:"gasoline", diesel:"diesel", hibrido:"hev", phev:"phev", ev:"ev" };
 const segmentMap = { "pequeño":"utilitario", "mediano":"berlina", "suv":"suv", "deportivo":"deportivo" };
 function getMotorizationsFor(brand, model){
