@@ -11,7 +11,12 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
   <link rel="icon" type="image/png" sizes="48x48" href="assets/favicon/favicon-48x48.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#0b5fff" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FairCar" />
+  <meta name="mobile-web-app-capable" content="yes" />
 </head>
 <body>
   <header class="topbar">
@@ -154,7 +159,7 @@
 
     <section class="footerline">
       <div class="small">
-        Nota: FairCar v1 (build v64) usa estimaciones coherentes y editables. No sustituye asesoramiento profesional.
+        Nota: FairCar v1 (build v39) usa estimaciones coherentes y editables. No sustituye asesoramiento profesional.
       </div>
     </section>
   </main>
@@ -167,6 +172,15 @@
   <script src="assets/dbPatchRuntime.js"></script>
   <script src="assets/faircar_safety_db.js"></script>
   <script src="assets/theme.js"></script>
-  <script src="assets/app.js?v=64"></script>
+  <script src="assets/app.js?v=63"></script>
+  <script>
+    if("serviceWorker" in navigator){
+      window.addEventListener("load", ()=>{
+        navigator.serviceWorker.register("/sw.js")
+          .then(r => console.log("SW registrado:", r.scope))
+          .catch(e => console.warn("SW error:", e));
+      });
+    }
+  </script>
 </body>
 </html>
