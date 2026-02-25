@@ -1,6 +1,6 @@
 // FairCar v1 — client-side only (Netlify-ready)
 (function(){
-  console.log("FairCar build v65");
+  console.log("FairCar build v66");
   const $ = (sel) => document.querySelector(sel);
   const mount = $("#stepMount");
   const btnBack = $("#btnBack");
@@ -6365,1398 +6365,646 @@ render();
   function stepFinanceDetails(car, letter){
   const step=document.createElement("div");
   step.className="step";
-  step.innerHTML = `
-    <h2>Oferta de financiación — Coche ${
-      letter==="A" ? "A" : "B"
-    }</h2>
-    <p>Primero definimos el <b>importe real financiado</b> (precio − entrada + apertura) y con el TIN calculamos una <b>cuota teórica</b> y una <b>TAE estimada</b>. La <b>cuota ofrecida</b> del concesionario se usa <b>solo</b> para comprobar si cuadra y para ver el <b>total según letra</b> (cuota × meses).</p>
-  `;
+  step.innerHTML = `<h2>Oferta de financiación — Coche ${letter==="A"?"A":"B"}</h2>`;
 
-  // Resumen del coche elegido
+  // Resumen del coche
   const sum=document.createElement("div");
   sum.className="hint is-big";
+  sum.style.marginTop="2px";
   sum.innerHTML = `<b>${car.brand||"—"} ${car.model||""}</b> · ${fuelLabel(car.fuel)} · ${segLabel(car.segment)}`;
   step.appendChild(sum);
 
-  // Tipo de financiación
-  const fmTitle=document.createElement("div");
-  fmTitle.className="section-title";
-  fmTitle.style.marginTop="10px";
-  fmTitle.textContent="Tipo de financiación";
-  step.appendChild(fmTitle);
-
-  // --- HERENCIA A→B: al entrar en coche B, copiar financeMode y downPayment de A si no se han cambiado ---
+  // ─── Herencia A→B ───
   if(letter==="B"){
-    const aMode = state.carA?.financeMode || "linear";
-    const aDown = Number(state.carA?.downPayment||0);
-    // Solo heredar si el valor es el default (no ha sido modificado por el usuario)
-    if(!car._financeModeTouched){ car.financeMode = aMode; }
-    if(!car._downPaymentTouched){ car.downPayment = aDown; }
+    if(!car._financeModeTouched){ car.financeMode = state.carA?.financeMode || "linear"; }
+    if(!car._downPaymentTouched){ car.downPayment = Number(state.carA?.downPayment||0); }
   }
 
-  // --- Función modal de aviso comparativa (solo coche B) ---
+  // ─── Modal aviso comparativa (coche B) ───
   function warnFinanceChange(fieldName, revertFn){
-    if(letter!=="B") return false; // no aviso en coche A
-    // Crear overlay modal
+    if(letter!=="B") return false;
     const overlay = document.createElement("div");
-    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(5,11,18,.72);display:flex;align-items:center;justify-content:center;padding:16px";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;max-width:400px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.5)">
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;max-width:400px;width:100%;box-shadow:var(--shadow)">
         <div style="font-size:22px;margin-bottom:8px">⚠️ Comparativa menos fiable</div>
-        <p style="color:var(--muted);margin:0 0 16px 0;line-height:1.45">Para comparar financiaciones de forma justa, ambos coches deberían tener el <b>mismo tipo</b> (lineal/flexible), el <b>mismo plazo</b> y la <b>misma entrada</b>. Si cambias esto, el análisis de financiación puede no ser fiable.</p>
+        <p style="color:var(--muted);margin:0 0 16px 0;line-height:1.45">Para comparar de forma justa, ambos coches deberían tener el mismo tipo, plazo y entrada.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button id="warnKeep" class="btn" style="flex:1;min-width:120px">Igualar a ${esc(state.carA?.brand||"Coche A")} ✓</button>
-          <button id="warnContinue" class="btn ghost" style="flex:1;min-width:120px">Continuar así</button>
+          <button id="warnKeep" class="btn" style="flex:1">Igualar a ${esc(state.carA?.brand||"Coche A")} ✓</button>
+          <button id="warnContinue" class="btn ghost" style="flex:1">Continuar así</button>
         </div>
-      </div>
-    `;
+      </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector("#warnKeep").addEventListener("click", ()=>{
-      revertFn();
-      car._financeNotComparable = false;
-      overlay.remove();
-      render();
-    });
-    overlay.querySelector("#warnContinue").addEventListener("click", ()=>{
-      car._financeNotComparable = true;
-      car._financeModeTouched = true;
-      overlay.remove();
-      render();
-    });
-    overlay.addEventListener("click", (e)=>{ if(e.target===overlay){ overlay.remove(); revertFn(); render(); } });
+    overlay.querySelector("#warnKeep").addEventListener("click",()=>{ revertFn(); car._financeNotComparable=false; overlay.remove(); render(); });
+    overlay.querySelector("#warnContinue").addEventListener("click",()=>{ car._financeNotComparable=true; car._financeModeTouched=true; overlay.remove(); render(); });
+    overlay.addEventListener("click",(e)=>{ if(e.target===overlay){ overlay.remove(); revertFn(); render(); } });
     return true;
   }
 
-  const fmGrid=document.createElement("div");
-  fmGrid.className="grid2";
-  fmGrid.appendChild(cardChoice(
-    "Lineal (cuota fija)",
-    "La financiación estándar: amortizas todo en el plazo.",
-    "📈",
+  // ══════════════════════════════════════════════
+  // BLOQUE 0 — Tipo de financiación + plazo
+  // ══════════════════════════════════════════════
+  const b0 = document.createElement("div");
+  b0.className = "fc-fin-block";
+  b0.style.marginTop = "14px";
+
+  const fmTitle = document.createElement("div");
+  fmTitle.className = "fc-fin-block-title";
+  fmTitle.textContent = "Tipo de financiación";
+  b0.appendChild(fmTitle);
+
+  const fmGrid = document.createElement("div");
+  fmGrid.className = "grid2";
+  fmGrid.style.marginTop = "8px";
+  fmGrid.appendChild(cardChoice("Lineal (cuota fija)","La financiación estándar: amortizas todo en el plazo.","📈",
     car.financeMode!=="flex",
     ()=>{
       if(letter==="B" && state.carA?.financeMode==="flex" && !car._financeModeTouched){
-        // Intentan cambiar a lineal cuando A es flex → aviso
         car.financeMode="linear"; car.flexGmv=0;
-        warnFinanceChange("tipo", ()=>{ car.financeMode=state.carA.financeMode||"flex"; if(!car.flexGmv) car.flexGmv=Math.round((car.pvpCash||0)*0.35)||0; });
-      } else {
-        car.financeMode="linear"; car.flexGmv=0; render();
-      }
+        warnFinanceChange("tipo",()=>{ car.financeMode=state.carA.financeMode||"flex"; if(!car.flexGmv) car.flexGmv=Math.round((car.pvpCash||0)*0.35)||0; });
+      } else { car.financeMode="linear"; car.flexGmv=0; render(); }
     }
   ));
-  fmGrid.appendChild(cardChoice(
-    "Flexible (valor final / GMV)",
-    "Cuota más baja + un valor final (si te quedas el coche) o lo entregas al final.",
-    "🔁",
+  fmGrid.appendChild(cardChoice("Flexible (valor final / GMV)","Cuota más baja + un valor final (si te quedas el coche) o lo entregas al final.","🔁",
     car.financeMode==="flex",
     ()=>{
       if(letter==="B" && state.carA?.financeMode!=="flex" && !car._financeModeTouched){
-        // Intentan cambiar a flex cuando A es lineal → aviso
         car.financeMode="flex"; if(!car.flexGmv) car.flexGmv=Math.round((car.pvpCash||car.priceFinanced||0)*0.35)||0;
-        warnFinanceChange("tipo", ()=>{ car.financeMode=state.carA.financeMode||"linear"; car.flexGmv=0; });
-      } else {
-        car.financeMode="flex"; if(!car.flexGmv) car.flexGmv=Math.round((car.pvpCash||car.priceFinanced||0)*0.35)||0; render();
-      }
+        warnFinanceChange("tipo",()=>{ car.financeMode=state.carA.financeMode||"linear"; car.flexGmv=0; });
+      } else { car.financeMode="flex"; if(!car.flexGmv) car.flexGmv=Math.round((car.pvpCash||car.priceFinanced||0)*0.35)||0; render(); }
     }
   ));
-  step.appendChild(fmGrid);
+  b0.appendChild(fmGrid);
 
+  // Flexible: GMV + decisión al final
   if(car.financeMode==="flex"){
-    // Valor final (GMV)
-    if(!car.flexEnd) car.flexEnd = "return";
+    if(!car.flexEnd) car.flexEnd="return";
+    const gmv=input("number",car.flexGmv,""); gmv.step="100";
+    gmv.addEventListener("input",()=>{ car.flexGmv=Number(gmv.value||0); recalc(); });
+    b0.appendChild(field("Valor final / GMV (€)",gmv,"Si te quedas el coche, este importe se paga al final."));
 
-    const gmv = input("number", car.flexGmv, "");
-    gmv.step="100";
-    gmv.addEventListener("input", ()=>{ car.flexGmv = Number(gmv.value||0); recalc(); });
-    step.appendChild(field("Valor final / GMV (€)", gmv, "Si te quedas el coche, este importe se paga al final. Si lo devuelves, lo liquidas entregando el coche."));
+    const endTitle=document.createElement("div"); endTitle.className="section-title"; endTitle.style.marginTop="10px"; endTitle.textContent="Al final del plazo";
+    b0.appendChild(endTitle);
+    const endGrid=document.createElement("div"); endGrid.className="grid2";
+    endGrid.appendChild(cardChoice("Devolver el coche","No pagas el valor final en efectivo.","↩️",car.flexEnd!=="keep",()=>{ car.flexEnd="return"; recalc(); render(); }));
+    endGrid.appendChild(cardChoice("Quedártelo","Sumamos el valor final al total pagado.","🔒",car.flexEnd==="keep",()=>{ car.flexEnd="keep"; recalc(); render(); }));
+    b0.appendChild(endGrid);
 
-    const endTitle=document.createElement("div");
-    endTitle.className="section-title";
-    endTitle.style.marginTop="10px";
-    endTitle.textContent="Al final del plazo";
-    step.appendChild(endTitle);
-
-    const endGrid=document.createElement("div");
-    endGrid.className="grid2";
-    endGrid.appendChild(cardChoice(
-      "Devolver el coche",
-      "No pagas el valor final en efectivo (entregas el coche).",
-      "↩️",
-      car.flexEnd!=="keep",
-      ()=>{ car.flexEnd="return"; recalc(); render(); }
-    ));
-    endGrid.appendChild(cardChoice(
-      "Quedártelo",
-      "Sumamos el valor final al total pagado.",
-      "🔒",
-      car.flexEnd==="keep",
-      ()=>{ car.flexEnd="keep"; recalc(); render(); }
-    ));
-    step.appendChild(endGrid);
-
-    const note=document.createElement("div");
-    note.className="hint";
-    note.innerHTML = (car.flexEnd==="keep")
-      ? "Si te lo quedas, FairCar <b>sumará el valor final</b> al coste. En el siguiente paso puedes activar si quieres <b>descontar la reventa</b> (si planeas venderlo al final del plazo)."
-      : "Si lo devuelves, FairCar calcula el coste real durante el plazo (y no descuenta reventa, porque no vendes: entregas el coche).";
-    step.appendChild(note);
+    const inst=input("number",Number(car.installments||0)||0,""); inst.step="1"; inst.min="0"; inst.max="180";
+    inst.addEventListener("input",()=>{ car.installments=Number(inst.value||0)||0; recalc(); });
+    b0.appendChild(field("Nº cuotas mensuales (opcional)",inst,"Ej: 48 cuotas + última cuota GMV. Si lo dejas en 0, FairCar usa el plazo."));
   }
 
-  // Plazo único para ambos coches: solo editable en el coche A
+  // Plazo
   if(letter==="A"){
-    const term = input("number", state.termMonths, "");
-    term.step="12"; term.min="12"; term.max="180";
-    term.addEventListener("input", ()=>{
-      // No normalizamos en cada tecla para no molestar; lo hacemos en "change".
-      state.termMonths = Number(term.value||state.termMonths||60);
-      recalc();
-    });
-    term.addEventListener("change", ()=>{
-      state.termMonths = normalizeTermMonths(term.value);
-      term.value = state.termMonths;
-      recalc();
-    });
-    step.appendChild(field("Plazo de análisis/financiación (meses) — único para ambos", term, "Puedes escribir cualquier valor (ej: 49). Con las flechas sube/baja de 12 en 12."));
+    const term=input("number",state.termMonths,""); term.step="12"; term.min="12"; term.max="180";
+    term.addEventListener("input",()=>{ state.termMonths=Number(term.value||state.termMonths||60); recalc(); });
+    term.addEventListener("change",()=>{ state.termMonths=normalizeTermMonths(term.value); term.value=state.termMonths; recalc(); });
+    b0.appendChild(field("Plazo de financiación (meses)",term,"Único para ambos coches. Puedes escribir cualquier valor (ej: 49)."));
   } else {
-    const info=document.createElement("div");
-    info.className="hint";
-    info.textContent = `Plazo de análisis: ${state.termMonths} meses (mismo que el coche A).`;
-    step.appendChild(info);
+    const inf=document.createElement("div"); inf.className="hint"; inf.textContent=`Plazo: ${state.termMonths} meses (igual que coche A).`;
+    b0.appendChild(inf);
   }
+  step.appendChild(b0);
 
-  // Nº de cuotas mensuales (solo en flexible / multiopción).
-  // En algunas ofertas el "plazo" incluye la última cuota (ej: 49 meses = 48 cuotas + VFG).
-  if(car.financeMode==="flex"){
-    const inst = input("number", Number(car.installments||0)||0, "");
-    inst.step="1"; inst.min="0"; inst.max="180";
-    inst.addEventListener("input", ()=>{ car.installments = Number(inst.value||0)||0; recalc(); });
-    step.appendChild(field("Nº cuotas mensuales (opcional)", inst, "Si tu oferta indica algo tipo “47/48 cuotas + última cuota”, pon aquí el nº de cuotas mensuales. Si lo dejas en 0, FairCar usa el plazo (meses)."));
+  // ══════════════════════════════════════════════
+  // BLOQUE 1 — Datos esenciales de la oferta
+  // ══════════════════════════════════════════════
+  const b1 = document.createElement("div");
+  b1.className = "fc-fin-block";
+  b1.style.marginTop = "12px";
 
-    if(Number(car.installments||0)>0 && Math.round(Number(car.installments||0))!==Number(state.termMonths||0)){
-      const hh=document.createElement("div");
-      hh.className="hint";
-      hh.textContent = `Nota: plazo total ${state.termMonths} meses, pero ${Math.round(Number(car.installments||0))} cuotas mensuales + última cuota.`;
-      step.appendChild(hh);
-    }
+  const b1title = document.createElement("div");
+  b1title.className = "fc-fin-block-title";
+  b1title.textContent = "Oferta del concesionario";
+  b1.appendChild(b1title);
+
+  // Importar presupuesto
+  const importBox=document.createElement("div");
+  importBox.className="hint is-big";
+  importBox.style.marginTop="8px";
+  importBox.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="min-width:0">
+        <div style="font-weight:900">Importar presupuesto</div>
+        <div class="smallmuted" style="margin-top:2px">Rellena todos los datos automáticamente con foto o PDF.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
+        <button class="btn ghost" type="button" id="btnBudgetCamera_${letter}" style="white-space:nowrap;display:flex;align-items:center;gap:5px"><span style="font-size:15px">📷</span> Foto</button>
+        <button class="btn ghost" type="button" id="btnBudgetImport_${letter}" style="white-space:nowrap;display:flex;align-items:center;gap:5px"><span style="font-size:15px">📎</span> PDF / imagen</button>
+      </div>
+    </div>
+    <div id="budgetStatus_${letter}" style="display:none;margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--info-bg);border:1px solid var(--info-border);font-size:13px;color:var(--lead)">
+      <span style="font-size:16px">⏳</span> <span id="budgetStatusText_${letter}">Procesando…</span>
+    </div>
+  `;
+  const budgetCamera=document.createElement("input"); budgetCamera.type="file"; budgetCamera.accept="image/*"; budgetCamera.setAttribute("capture","environment"); budgetCamera.style.display="none"; importBox.appendChild(budgetCamera);
+  const budgetFile=document.createElement("input"); budgetFile.type="file"; budgetFile.accept="image/*,application/pdf,.pdf"; budgetFile.style.display="none"; importBox.appendChild(budgetFile);
+  b1.appendChild(importBox);
+
+  function setBudgetStatus(msg){
+    const bar=importBox.querySelector(`#budgetStatus_${letter}`); const txt=importBox.querySelector(`#budgetStatusText_${letter}`);
+    if(!bar||!txt) return;
+    bar.style.display=msg?"block":"none"; if(msg) txt.textContent=msg;
   }
+  importBox.querySelector(`#btnBudgetCamera_${letter}`).addEventListener("click",()=>{ budgetCamera.value=""; budgetCamera.click(); });
+  importBox.querySelector(`#btnBudgetImport_${letter}`).addEventListener("click",()=>{ budgetFile.value=""; budgetFile.click(); });
+  async function handleBudgetFile(f){ if(!f) return; setBudgetStatus("Leyendo archivo…"); try{ await budgetImportFlow({file:f,car,letter,onProgress:(msg)=>setBudgetStatus(msg)}); }finally{ setBudgetStatus(null); } }
+  budgetCamera.addEventListener("change",async()=>{ await handleBudgetFile(budgetCamera.files&&budgetCamera.files[0]); });
+  budgetFile.addEventListener("change",async()=>{ await handleBudgetFile(budgetFile.files&&budgetFile.files[0]); });
 
-  // Oferta (orden claro): editable a la izquierda, calculado a la derecha
-// Nota: mantenemos el cálculo interno (financeMonthlyCost) y solo cambiamos la UI.
-function fieldInfo(labelText, inputEl, infoHtml){
-  const wrap=document.createElement("div");
-  wrap.className="field";
-  const lab=document.createElement("div");
-  lab.className="label";
-  const row=document.createElement("div");
-  row.className="label-row";
-  row.innerHTML = `<span class="label-text">${labelText}</span><button type="button" class="infoBtn" aria-label="Información">i</button>`;
-  lab.appendChild(row);
-  wrap.appendChild(lab);
-  wrap.appendChild(inputEl);
-  const panel=document.createElement("div");
-  panel.className="infoPanel";
-  panel.style.display="none";
-  const h=document.createElement("div");
-  h.className="hint";
-  h.innerHTML = infoHtml;
-  panel.appendChild(h);
-  wrap.appendChild(panel);
-  row.querySelector("button").addEventListener("click",(e)=>{
-    e.preventDefault();
-    panel.style.display = (panel.style.display==="none") ? "block" : "none";
+  // ── Campos editables (grid 2 columnas) ──
+  const g1 = document.createElement("div");
+  g1.className = "grid2 keep2";
+  g1.style.marginTop = "10px";
+
+  // Cuota ofrecida
+  const cuotaOffer=input("number",car.monthlyPayment,""); cuotaOffer.step="0.01";
+  cuotaOffer.addEventListener("input",()=>{ car.monthlyPayment=Number(cuotaOffer.value||0); recalc(); });
+  g1.appendChild(field("Cuota ofrecida (€/mes)",cuotaOffer,"Solo para comprobar si cuadra con el TIN."));
+
+  // PVP al contado — siempre visible, sin pregunta previa
+  function getOrientativePvp(){
+    let p=0;
+    try{ if(car.versionMeta && Number(car.versionMeta.price||0)>0) p=Number(car.versionMeta.price||0); }catch(e){}
+    if(!(p>0)){ try{ const md=getModelData(car.brand,car.model); if(md) p=Number(md.priceFrom||0)||Number(md.price||0)||0; }catch(e){} }
+    if(!(p>0)) p=Number(car.pvpCashOrient||0)||Number(car.pvpCash||0)||25000;
+    return Math.round(p);
+  }
+  const orientPvp0=getOrientativePvp();
+  car.pvpCashOrient=orientPvp0;
+  if(!car.pvpKnown) car.pvpKnown=(Number(car.pvpCashManual||0)>0)?"yes":"no";
+
+  const pvp=input("number",Number(car.pvpCashManual||0)||orientPvp0,""); pvp.step="100";
+  pvp.addEventListener("input",()=>{
+    const v=Number(pvp.value||0);
+    car.pvpCash=v; car.pvpCashManual=v; car.pvpKnown="yes";
+    syncPriceFin(); recalc();
   });
-  return wrap;
-}
-
-// Inputs editables
-const pvp = input("number", car.pvpCash, "");
-pvp.step="100";
-
-
-// ¿Sabes el PVP? (muchas ofertas solo dan la cuota)
-function getOrientativePvp(){
-  let p = 0;
-  try{
-    if(car.versionMeta && Number(car.versionMeta.price||0)>0) p = Number(car.versionMeta.price||0);
-  }catch(e){}
-  if(!(p>0)){
-    try{
-      const md = getModelData(car.brand, car.model);
-      if(md){
-        p = Number(md.priceFrom||0) || Number(md.price||0) || 0;
-      }
-    }catch(e){}
+  const pvpWrap=field("PVP al contado (€)",pvp,"Precio sin financiación. Si no lo sabes, el orientativo de la versión es: "+euro(orientPvp0));
+  if(!car.pvpCashManual || Number(car.pvpCashManual||0)<=0){
+    const pvpHint=document.createElement("div"); pvpHint.className="hint"; pvpHint.textContent=`Orientativo según versión: ${euro(orientPvp0)}. Pide el PVP real al concesionario.`;
+    pvpWrap.appendChild(pvpHint);
   }
-  if(!(p>0)) p = Number(car.pvpCashOrient||0) || 0;
-  if(!(p>0)) p = Number(car.pvpCash||0) || 0;
-  if(!(p>0)) p = 25000;
-  return Math.round(p);
-}
+  g1.appendChild(pvpWrap);
 
-const orientPvp0 = getOrientativePvp();
-car.pvpCashOrient = orientPvp0;
+  // Entrada
+  const down=input("number",car.downPayment,""); down.step="100";
+  down.addEventListener("input",()=>{
+    const newVal=Number(down.value||0);
+    if(letter==="B" && !car._downPaymentTouched && Math.abs(newVal-Number(state.carA?.downPayment||0))>50){
+      const prevVal=Number(car.downPayment||0);
+      car.downPayment=newVal;
+      warnFinanceChange("entrada",()=>{ car.downPayment=Number(state.carA?.downPayment||0); down.value=String(car.downPayment); recalc(); });
+      car._downPaymentTouched=true;
+    } else { car.downPayment=newVal; }
+    recalc();
+  });
+  g1.appendChild(field("Entrada (€)",down));
 
-const _pvpKnownDefault = car.pvpKnown
-  || ((Number(car.pvpCashManual||0)>0) ? "yes" : ((Number(car.pvpCash||0)>0 && Math.abs(Number(car.pvpCash||0)-orientPvp0)>150) ? "yes" : "no"));
-car.pvpKnown = _pvpKnownDefault;
+  // Descuento por financiar
+  const discIn=input("number",car.financeDiscount||0,""); discIn.step="100";
+  discIn.addEventListener("input",()=>{ car.financeDiscount=Number(discIn.value||0); syncPriceFin(); recalc(); });
+  g1.appendChild(field("Bonificación por financiar (€)",discIn,"Ej: descuento TFS/VWFS. FairCar lo resta del PVP."));
 
-const knowsPvp = select([
-  ["no","No"],
-  ["yes","Sí"]
-], _pvpKnownDefault);
+  // TIN
+  const tin=input("number",car.tin,""); tin.step="0.01";
+  tin.addEventListener("input",()=>{ car.tin=Number(tin.value||0); recalc(); });
+  g1.appendChild(field("TIN (%)",tin));
 
-const pvpOrient = input("number", orientPvp0, "");
-pvpOrient.step="100";
-pvpOrient.readOnly = true;
-pvpOrient.tabIndex = -1;
+  // TAE oficial (solo referencia, no afecta cálculos)
+  const taeOficial=input("number",car.tae||"",""); taeOficial.step="0.01";
+  taeOficial.addEventListener("input",()=>{ car.tae=Number(taeOficial.value||0)||0; recalc(); });
+  g1.appendChild(field("TAE oficial (%)",taeOficial,"La TAE del contrato. FairCar la compara con su estimación para detectar discrepancias."));
 
-function applyPvpMode(){
-  const mode = knowsPvp.value;
-  car.pvpKnown = mode;
-  const orient = getOrientativePvp();
-  car.pvpCashOrient = orient;
-  pvpOrient.value = String(Math.round(orient));
+  b1.appendChild(g1);
+  step.appendChild(b1);
 
-  if(mode === "no"){
-    // Usamos el PVP orientativo para permitir avanzar, sin borrar un PVP manual si existe.
-    car.pvpCash = orient;
-    if(!car.priceFinanced || Number(car.priceFinanced||0)<=0) car.priceFinanced = orient;
-  } else {
-    // Si el usuario ya metió un PVP manual, lo usamos. Si no, dejamos el valor actual como base editable.
-    if(Number(car.pvpCashManual||0)>0){
-      car.pvpCash = Number(car.pvpCashManual||0);
-      pvp.value = String(Math.round(car.pvpCash));
-    } else {
-      // mantiene el valor actual (posible orientativo) y permite editar
-      const v = Number(pvp.value||0) || Number(car.pvpCash||0) || orient;
-      car.pvpCash = v;
-      pvp.value = String(Math.round(v));
-    }
+  // ══════════════════════════════════════════════
+  // BLOQUE 2 — Comisión de apertura (colapsable)
+  // ══════════════════════════════════════════════
+  const hasAnyOpenFee = Number(car.openFeePct||0)>0 || Number(car._openFeeAmt||0)>0;
+  const d2=document.createElement("details");
+  d2.className="fc-details"; d2.style.marginTop="8px";
+  if(hasAnyOpenFee) d2.open=true;
+  d2.innerHTML=`<summary>Comisión de apertura ${hasAnyOpenFee ? `<span class="badge warn" style="margin-left:8px;font-size:11px">Activa</span>` : `<span style="color:var(--muted);font-size:12px;margin-left:8px">Sin comisión</span>`}</summary>`;
+  const d2body=document.createElement("div"); d2body.className="fc-details-body";
+
+  const openGrid=document.createElement("div"); openGrid.className="grid2 keep2"; openGrid.style.marginTop="4px";
+  const openAmt=input("number",car._openFeeAmt||0,""); openAmt.step="10"; openAmt.placeholder="0";
+  const open=input("number",car.openFeePct||0,""); open.step="0.01"; open.placeholder="0";
+
+  function syncOpenFeeAmtToPct(){
+    const base=Math.max(1,(Number(car.priceFinanced||0)||Number(car.pvpCash||0)||1)-Number(car.downPayment||0));
+    const amt=Number(openAmt.value||0); if(amt>0 && base>0){ const pct=Math.round((amt/base)*10000)/100; car.openFeePct=pct; open.value=String(pct); }
+    else if(Number(open.value||0)<=0){ car.openFeePct=0; }
+    car._openFeeAmt=amt; recalc();
   }
-}
-const discIn = input("number", car.financeDiscount||0, "");
-discIn.step="100";
-
-const down = input("number", car.downPayment, "");
-down.step="100";
-
-const open = input("number", car.openFeePct, "");
-open.step="0.1";
-
-// ¿Sabes si tienes comisión de apertura? (Si respondes “Sí”, se abre el campo %)
-const _openDefault = (car.hasOpenFee || ((Number(car.openFeePct||0)>0) ? "yes" : "no"));
-const hasOpenFee = select([
-  ["no","No lo sé"],
-  ["yes","Sí"]
-], _openDefault);
-// persistimos el valor inicial
-car.hasOpenFee = hasOpenFee.value;
-
-const tin = input("number", car.tin, "");
-tin.step="0.01";
-
-const ins = input("number", car.lifeInsMonthly, "");
-ins.step="1";
-
-// ¿Sabes si tienes seguros incluidos en el préstamo?
-// (Si respondes “Sí”, se abre el campo para indicar el importe mensual.)
-const _lifeDefault = (car.hasLifeInLoan || (((Number(car.lifeInsMonthly||0)>0) || (Number(car.insFinancedTotal||0)>0) || car.insInPayment==="yes") ? "yes" : "no"));
-const hasLife = select([
-  ["no","No lo sé"],
-  ["yes","Sí"]
-], _lifeDefault);
-// persistimos el valor inicial
-car.hasLifeInLoan = hasLife.value;
-car.insInPayment = (hasLife.value === "yes") ? "yes" : "no";
-
-// Modo de seguros incluidos (prima única financiada vs pago mensual)
-const _insModeDefault = (car.insMode === "financed" || car.insMode === "monthly")
-  ? car.insMode
-  : ((Number(car.insFinancedTotal||0)>0) ? "financed" : "monthly");
-
-const insModeSel = select([
-  ["financed","Total en una cuota y financiado"],
-  ["monthly","Pago mensual incluido en la cuota"]
-], _insModeDefault);
-
-car.insMode = insModeSel.value;
-
-const insTotal = input("number", car.insFinancedTotal||0, "");
-insTotal.step="1";
-
-// Campos calculados (readonly)
-const priceFinEl = input("number", car.priceFinanced||0, "");
-priceFinEl.step="100";
-priceFinEl.readOnly = true;
-priceFinEl.tabIndex = -1;
-
-const dealerDiscEl = input("number", 0, "");
-dealerDiscEl.readOnly = true;
-dealerDiscEl.tabIndex = -1;
-
-
-const govHelpEl = input("number", 0, "");
-govHelpEl.readOnly = true;
-govHelpEl.tabIndex = -1;
-
-const interestPaidEl = input("number", 0, "");
-interestPaidEl.readOnly = true;
-interestPaidEl.tabIndex = -1;
-
-
-const openEurEl = input("number", 0, "");
-openEurEl.readOnly = true;
-openEurEl.tabIndex = -1;
-
-const principalNoIntEl = input("number", 0, "");
-principalNoIntEl.readOnly = true;
-principalNoIntEl.tabIndex = -1;
-
-const totalWithIntEl = input("number", 0, "");
-totalWithIntEl.readOnly = true;
-totalWithIntEl.tabIndex = -1;
-
-const cuotaCalc = input("number", 0, "");
-cuotaCalc.readOnly = true;
-cuotaCalc.tabIndex = -1;
-cuotaCalc.step = "0.01";
-
-// Cuota ofrecida (NO afecta a cálculos principales)
-const cuotaOffer = input("number", car.monthlyPayment, "");
-cuotaOffer.step="0.01";
-
-// Total según letra ofrecida (cuota × meses)
-const totalOfferEl = input("number", 0, "");
-totalOfferEl.readOnly = true;
-totalOfferEl.tabIndex = -1;
-
-const taeInline = input("number", 0, "");
-taeInline.readOnly = true;
-taeInline.tabIndex = -1;
-taeInline.step = "0.01";
-
-const taeRealEl = input("number", 0, "");
-taeRealEl.readOnly = true;
-taeRealEl.tabIndex = -1;
-taeRealEl.step = "0.01";
-
-// Sincroniza “Precio si financias” a partir de PVP y descuento
-function syncPriceFin(){
-  const p = Number(car.pvpCash||0)||0;
-  const d = Number(car.financeDiscount||0)||0;
-
-  if(p>0){
-    const dc = clamp(d, 0, p);
-    if(dc!==d){
-      car.financeDiscount = dc;
-      discIn.value = String(dc);
-    }
-    const dealerDisc = autoPlusDealerDiscountForFinance(car);
-    const pfv = Math.max(0, p - dc - dealerDisc);
-    car.priceFinanced = pfv;
-    priceFinEl.value = String(Math.round(pfv));
-  } else {
-    priceFinEl.value = String(Math.round(Number(car.priceFinanced||0)||0));
+  function syncOpenFeePctToAmt(){
+    const base=Math.max(1,(Number(car.priceFinanced||0)||Number(car.pvpCash||0)||1)-Number(car.downPayment||0));
+    const pct=Number(open.value||0); if(pct>0 && base>0){ const amt=Math.round(base*pct/100); car._openFeeAmt=amt; openAmt.value=String(amt); }
+    else if(Number(openAmt.value||0)<=0){ car._openFeeAmt=0; }
+    car.openFeePct=pct; recalc();
   }
-}
-
-// Wrappers UI para PVP
-let pvpAmountWrap = null;
-let pvpOrientWrap = null;
-
-// Listeners (editable)
-function togglePvpFields(){
-  if(!pvpAmountWrap || !pvpOrientWrap) return;
-  const on = (knowsPvp.value === "yes");
-  pvpAmountWrap.style.display = on ? "block" : "none";
-  pvpOrientWrap.style.display = on ? "none" : "block";
-}
-
-
-// Nota derecha: PVP no confirmado (se oculta si confirmas el PVP)
-let pvpNotConfirmedNote = null;
-function refreshPvpNotConfirmedNote(){
-  if(!pvpNotConfirmedNote) return;
-  const show = (knowsPvp.value !== "yes");
-  pvpNotConfirmedNote.style.display = show ? "block" : "none";
-  if(show){
-    pvpNotConfirmedNote.innerHTML = `ℹ️ <b>PVP no confirmado</b>: estamos usando un precio <b>orientativo</b> de <b>${euro(car.pvpCashOrient||car.pvpCash||0)}</b> según la versión seleccionada. Para refinar la financiación, pide al concesionario el <b>PVP real al contado</b>.`;
-  }
-}
-
-knowsPvp.addEventListener("change", ()=>{
-  applyPvpMode();
-  togglePvpFields();
-  refreshPvpNotConfirmedNote();
-  syncPriceFin();
-  recalc();
-});
-
-pvp.addEventListener("input", ()=>{
-  const v = Number(pvp.value||0);
-  car.pvpCash = v;
-  car.pvpCashManual = v;
-  car.pvpKnown = "yes";
-  knowsPvp.value = "yes";
-  applyPvpMode();
-  togglePvpFields();
-  refreshPvpNotConfirmedNote();
-  syncPriceFin();
-  recalc();
-});
-
-discIn.addEventListener("input", ()=>{ car.financeDiscount = Number(discIn.value||0); syncPriceFin(); recalc(); });
-down.addEventListener("input", ()=>{
-  const newVal = Number(down.value||0);
-  if(letter==="B" && !car._downPaymentTouched && Math.abs(newVal - Number(state.carA?.downPayment||0)) > 50){
-    const prevVal = Number(car.downPayment||0);
-    car.downPayment = newVal;
-    const revert = ()=>{ car.downPayment = Number(state.carA?.downPayment||0); down.value = String(car.downPayment); recalc(); };
-    warnFinanceChange("entrada", revert);
-    car._downPaymentTouched = true;
-  } else {
-    car.downPayment = newVal;
-  }
-  recalc();
-});
-open.addEventListener("input", ()=>{ car.openFeePct = Number(open.value||0); recalc(); });
-tin.addEventListener("input", ()=>{ car.tin = Number(tin.value||0); recalc(); });
-ins.addEventListener("input", ()=>{ car.lifeInsMonthly = Number(ins.value||0); recalc(); });
-
-
-	insTotal.addEventListener("input", ()=>{ car.insFinancedTotal = Number(insTotal.value||0); recalc(); });
-	insModeSel.addEventListener("change", ()=>{ car.insMode = insModeSel.value; toggleLifeAmount(); recalc(); });
-// Comisión de apertura: si respondes “Sí”, se muestra el campo %
-let openAmountWrap = null;
-function toggleOpenAmount(){
-  if(!openAmountWrap) return;
-  const on = (hasOpenFee.value === "yes");
-  openAmountWrap.style.display = on ? "block" : "none";
-}
-
-hasOpenFee.addEventListener("change", ()=>{
-  car.hasOpenFee = hasOpenFee.value;
-  if(hasOpenFee.value === "no"){
-    car.openFeePct = 0;
-    open.value = "0";
-  }
-  toggleOpenAmount();
-  recalc();
-});
-
-// Seguros incluidos: si el usuario marca que sí, mostramos modo + campos (total financiado o mensual)
-let lifeAmountWrap = null;        // wrapper mensual
-let lifeTotalWrap = null;         // wrapper total financiado
-let insModeWrap = null;           // wrapper selector modo
-let lifeSvcWrap = null;
-
-function toggleLifeAmount(){
-  const on = (hasLife.value === "yes");
-
-  if(insModeWrap){
-    insModeWrap.style.display = on ? "block" : "none";
-  }
-  if(lifeAmountWrap){
-    const showMonthly = on && (insModeSel.value === "monthly");
-    lifeAmountWrap.style.display = showMonthly ? "block" : "none";
-  }
-  if(lifeTotalWrap){
-    const showTotal = on && (insModeSel.value === "financed");
-    lifeTotalWrap.style.display = showTotal ? "block" : "none";
-  }
-  if(lifeSvcWrap){
-    lifeSvcWrap.style.display = on ? "block" : "none";
-  }
-}
-
-hasLife.addEventListener("change", ()=>{
-  car.hasLifeInLoan = hasLife.value;
-  // compatibilidad con cálculos existentes
-  car.insInPayment = (hasLife.value === "yes") ? "yes" : "no";
-
-  if(hasLife.value === "no"){
-    car.lifeInsMonthly = 0;
-    car.insFinancedTotal = 0;
-    ins.value = "0";
-    insTotal.value = "0";
-    if(car.lifeService){
-      car.lifeService.wanted = "no";
-    }
-  } else {
-    car.insMode = insModeSel.value;
-  }
-
-  toggleLifeAmount();
-  recalc();
-});
-cuotaOffer.addEventListener("input", ()=>{ car.monthlyPayment = Number(cuotaOffer.value||0); recalc(); });
-
-// Layout en 2 columnas (izq editable / dcha automático)
-const offerCols = document.createElement("div");
-offerCols.className = "two-cols";
-offerCols.style.padding = "0";
-offerCols.style.marginTop = "12px";
-
-const colIn = document.createElement("div");
-colIn.className = "col";
-colIn.innerHTML = `
-  <div class="col-head">
-    <div>
-      <div class="col-title">Oferta del concesionario</div>
-    </div>
-  </div>
-`;
-const colOut = document.createElement("div");
-colOut.className = "col";
-colOut.innerHTML = `
-  <div class="col-head">
-    <div>
-      <div class="col-title">FairCar calcula</div>
-      <div class="col-sub">Resultados automáticos (para comparar ofertas)</div>
-    </div>
-  </div>
-`;
-
-// Izquierda (editable)
-const importBox = document.createElement("div");
-importBox.className = "hint is-big";
-importBox.style.marginTop = "6px";
-importBox.innerHTML = `
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div style="min-width:0">
-      <div style="font-weight:900">Importar presupuesto</div>
-      <div class="smallmuted" style="margin-top:2px">Rellena cuota, entrada, plazo, TIN/TAE… automáticamente. Podrás revisar antes de aplicar.</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
-      <button class="btn ghost" type="button" id="btnBudgetCamera_${letter}" style="white-space:nowrap;display:flex;align-items:center;gap:5px">
-        <span style="font-size:15px">📷</span> Hacer foto
-      </button>
-      <button class="btn ghost" type="button" id="btnBudgetImport_${letter}" style="white-space:nowrap;display:flex;align-items:center;gap:5px">
-        <span style="font-size:15px">📎</span> PDF / imagen
-      </button>
-    </div>
-  </div>
-  <div id="budgetStatus_${letter}" style="display:none;margin-top:10px;padding:8px 12px;border-radius:10px;background:rgba(11,95,255,.12);border:1px solid rgba(11,95,255,.25);font-size:13px;color:var(--lead);display:none;align-items:center;gap:10px">
-    <span style="font-size:16px">⏳</span>
-    <span id="budgetStatusText_${letter}">Procesando…</span>
-  </div>
-`;
-
-// Input para cámara: capture=environment abre cámara trasera directamente en móvil
-const budgetCamera = document.createElement("input");
-budgetCamera.type = "file";
-budgetCamera.accept = "image/*";
-budgetCamera.setAttribute("capture", "environment");
-budgetCamera.style.display = "none";
-importBox.appendChild(budgetCamera);
-
-// Input para archivo: PDF o imagen desde galería/explorador
-const budgetFile = document.createElement("input");
-budgetFile.type = "file";
-budgetFile.accept = "image/*,application/pdf,.pdf";
-budgetFile.style.display = "none";
-importBox.appendChild(budgetFile);
-
-colIn.appendChild(importBox);
-
-// Helper para mostrar estado de progreso
-function setBudgetStatus(msg) {
-  const bar = importBox.querySelector(`#budgetStatus_${letter}`);
-  const txt = importBox.querySelector(`#budgetStatusText_${letter}`);
-  if (!bar || !txt) return;
-  if (msg) {
-    bar.style.display = "flex";
-    txt.textContent = msg;
-  } else {
-    bar.style.display = "none";
-  }
-}
-
-// Botón cámara → abre cámara trasera directamente
-importBox.querySelector(`#btnBudgetCamera_${letter}`).addEventListener("click", ()=>{
-  budgetCamera.value = "";
-  budgetCamera.click();
-});
-
-// Botón archivo → abre selector normal (PDF + imágenes)
-importBox.querySelector(`#btnBudgetImport_${letter}`).addEventListener("click", ()=>{
-  budgetFile.value = "";
-  budgetFile.click();
-});
-
-// Handler compartido para cualquier archivo seleccionado
-async function handleBudgetFile(f) {
-  if (!f) return;
-  setBudgetStatus("Leyendo archivo…");
-  try {
-    await budgetImportFlow({ file: f, car, letter, onProgress: (msg) => setBudgetStatus(msg) });
-  } finally {
-    setBudgetStatus(null);
-  }
-}
-
-budgetCamera.addEventListener("change", async () => {
-  await handleBudgetFile(budgetCamera.files && budgetCamera.files[0]);
-});
-budgetFile.addEventListener("change", async () => {
-  await handleBudgetFile(budgetFile.files && budgetFile.files[0]);
-});
-
-colIn.appendChild(field("Cuota ofrecida por el concesionario (€/mes)", cuotaOffer, "Si solo te dan la cuota, mete este dato primero. No cambia los cálculos de la derecha: sirve para ver el total según letra y comprobar si cuadra."));
-colIn.appendChild(field("¿Sabes el precio PVP del coche?", knowsPvp, "Si respondes No, FairCar usará un PVP orientativo según la versión para que puedas avanzar. Para afinar, pide el PVP real al contado."));
-
-pvpAmountWrap = document.createElement("div");
-pvpAmountWrap.style.display = (knowsPvp.value === "yes") ? "block" : "none";
-pvpAmountWrap.appendChild(field("PVP al contado (€)", pvp));
-colIn.appendChild(pvpAmountWrap);
-
-pvpOrientWrap = document.createElement("div");
-pvpOrientWrap.style.display = (knowsPvp.value === "yes") ? "none" : "block";
-pvpOrientWrap.appendChild(field("PVP orientativo según versión (€)", pvpOrient, "Precio orientativo según la versión seleccionada. Pide el PVP real al contado para refinar."));
-colIn.appendChild(pvpOrientWrap);
-
-colIn.appendChild(field("Descuento/bonificación por financiar (€)", discIn, "Ej: bonificación de la financiera (TFS/VWFS…). FairCar calcula el ‘precio si financias’ como PVP − descuento."));
-colIn.appendChild(field("Entrada (€)", down));
-colIn.appendChild(field("¿Sabes si tienes comisión de apertura (%)?", hasOpenFee, "Si respondes Sí, indica el % exacto que aparece en la oferta."));
-
-// Campo % apertura (solo si el usuario marca “Sí”)
-openAmountWrap = document.createElement("div");
-openAmountWrap.style.display = (hasOpenFee.value === "yes") ? "block" : "none";
-openAmountWrap.appendChild(field("Comisión de apertura (%)", open, "Si está financiada, se suma al importe del préstamo."));
-colIn.appendChild(openAmountWrap);
-
-colIn.appendChild(field("TIN (%)", tin));
-colIn.appendChild(field("¿Sabes si tienes seguros incluidos en el préstamo?", hasLife, "Si respondes Sí, indica cómo aparecen en la oferta (prima financiada o pago mensual)."));
-
-// Selector modo (solo si el usuario marca “Sí”)
-insModeWrap = document.createElement("div");
-insModeWrap.style.display = (hasLife.value === "yes") ? "block" : "none";
-insModeWrap.appendChild(field("¿Cómo aparecen esos seguros en la oferta?", insModeSel, "Elige si van como prima única financiada (se suma al crédito) o como pago mensual dentro de la cuota."));
-colIn.appendChild(insModeWrap);
-
-// Campo total financiado (solo si el usuario marca “Sí” y el modo es 'financed')
-lifeTotalWrap = document.createElement("div");
-lifeTotalWrap.style.display = (hasLife.value === "yes" && insModeSel.value === "financed") ? "block" : "none";
-lifeTotalWrap.appendChild(field("Seguros financiados (importe total) (€)", insTotal, "Prima única financiada: se suma al importe del crédito y genera intereses."));
-colIn.appendChild(lifeTotalWrap);
-
-// Campo mensual (solo si el usuario marca “Sí” y el modo es 'monthly')
-lifeAmountWrap = document.createElement("div");
-lifeAmountWrap.style.display = (hasLife.value === "yes" && insModeSel.value === "monthly") ? "block" : "none";
-lifeAmountWrap.appendChild(field("Seguros incluidos (€/mes)", ins, "Importe mensual incluido en la cuota (según la oferta)."));
-colIn.appendChild(lifeAmountWrap);
-
-// Recomendación + servicio opcional (solo si hay seguros incluido)
-lifeSvcWrap = document.createElement("div");
-lifeSvcWrap.className = "service-box";
-lifeSvcWrap.style.display = (hasLife.value === "yes") ? "block" : "none";
-
-// Estado inicial (persistente en el coche)
-car.autoPlusDealerAlreadyIncluded = car.autoPlusDealerAlreadyIncluded || "no";
-car.autoPlusApplyGovToFinance = car.autoPlusApplyGovToFinance || "no";
-
-car.lifeService = car.lifeService || { wanted:"no", wantCheaper:"no", nameDni:"", policyNo:"", insurer:"", deliveryDate:"", email:"", whatsapp:"", notes:"", caseId:"" };
-
-lifeSvcWrap.innerHTML = `
-  <div class="service-title">Recomendación FairCar — Seguros incluidos</div>
-  <div class="service-kicker">
-    Estos seguros <b>no suelen ser obligatorios por ley</b>, pero a veces los ponen como <b>condición comercial</b> para aprobar el préstamo o mantener el tipo.
-    Si te interesa quitarlo después, aquí tienes una guía rápida.
-  </div>
-`;
-
-// Pasos + plantilla
-const diy = document.createElement("details");
-diy.className = "fc-details";
-diy.innerHTML = `
-  <summary>Hazlo tú (pasos + plantilla)</summary>
-  <div class="fc-details-body">
-    <ol class="service-steps">
-      <li>Pide al vendedor o financiera el <b>nº de póliza</b>, la <b>aseguradora</b> y la <b>fecha de entrega</b> de la documentación.</li>
-      <li>Si estás dentro del plazo de desistimiento de la póliza, envía una comunicación <b>por escrito</b> (email/carta) a la aseguradora.</li>
-      <li>Guarda el justificante de envío y confirma la baja por escrito.</li>
-      <li>Antes de cancelarlo, revisa si el seguro estaba ligado a una <b>bonificación</b> del préstamo (tipo/condiciones).</li>
-    </ol>
-    <div class="btn-row" style="margin-top:10px; gap:10px; display:flex; flex-wrap:wrap;">
-      <button type="button" class="btn ghost" id="btnLifeTpl_${letter}">Descargar plantilla</button>
-      <button type="button" class="btn ghost" id="btnLifeMail_${letter}">Copiar email listo</button>
-    </div>
-    <div class="service-note">* Esta plantilla es orientativa. Si no estás dentro de plazo, puede aplicar la cancelación en renovación o condiciones específicas de la póliza.</div>
-  </div>
-`;
-lifeSvcWrap.appendChild(diy);
-
-// Upsell / servicio
-const ups = document.createElement("div");
-ups.className = "service-panel";
-ups.innerHTML = `
-  <div class="mismatch-sub">¿Prefieres que lo gestione FairCar por ti?</div>
-  <div class="service-kicker" style="margin-top:6px">
-    <span class="service-price">Servicio: 19,90 € + IVA</span> (24,08 € IVA incl.).
-    Revisamos tu contrato/póliza y la financiación para confirmar si conviene cancelarlo y, si es viable, <b>gestionamos la baja por ti</b>.
-    <b>Si no se puede cancelar</b> o <b>no se recomienda</b> por impacto en condiciones, <b>te devolvemos el dinero</b>.
-  </div>
-`;
-
-const chk = document.createElement("label");
-chk.className = "service-check";
-chk.innerHTML = `<input type="checkbox" id="chkLifeSvc_${letter}" ${car.lifeService.wanted==="yes"?"checked":""}/> <span>Quiero contratar este servicio</span>`;
-ups.appendChild(chk);
-
-const panel = document.createElement("div");
-panel.className = "service-panel";
-panel.style.display = (car.lifeService.wanted === "yes") ? "block" : "none";
-
-// Campos mínimos (sin complicar): se guardan en este dispositivo y luego se asocian al registro
-const nameDni = input("text", car.lifeService.nameDni||"", "Nombre y DNI");
-const policyNo = input("text", car.lifeService.policyNo||"", "Nº póliza / solicitud");
-const insurer = input("text", car.lifeService.insurer||"", "Aseguradora");
-const deliv = input("date", car.lifeService.deliveryDate||"", "");
-const email = input("email", car.lifeService.email||"", "Email");
-const wa = input("tel", car.lifeService.whatsapp||"", "WhatsApp (opcional)");
-const notes = document.createElement("textarea");
-notes.className = "input";
-notes.placeholder = "Notas (opcional): lo que te dijo el vendedor, si te dijeron que era obligatorio, etc.";
-notes.rows = 3;
-notes.value = car.lifeService.notes||"";
-
-panel.appendChild(field("Nombre y DNI", nameDni));
-panel.appendChild(field("Nº póliza / solicitud", policyNo));
-panel.appendChild(field("Aseguradora", insurer));
-panel.appendChild(field("Fecha entrega póliza/doc (si la sabes)", deliv));
-panel.appendChild(field("Email", email));
-panel.appendChild(field("WhatsApp (opcional)", wa));
-panel.appendChild(field("Notas (opcional)", notes));
-
-const chkCheaper = document.createElement("label");
-chkCheaper.className = "service-check";
-chkCheaper.innerHTML = `<input type="checkbox" id="chkLifeCheaper_${letter}" ${car.lifeService.wantCheaper==="yes"?"checked":""}/> <span>Opcional: quiero que FairCar busque una alternativa de seguro más barata</span>`;
-panel.appendChild(chkCheaper);
-
-const btnRow = document.createElement("div");
-btnRow.className = "btn-row";
-btnRow.style.marginTop = "10px";
-btnRow.innerHTML = `<button type="button" class="btn primary" id="btnLifeReq_${letter}">Guardar solicitud</button>`;
-panel.appendChild(btnRow);
-
-const note = document.createElement("div");
-note.className = "service-note";
-note.innerHTML = `Para tramitarlo, necesitarás registrarte al final. En esta demo, la solicitud se guarda en <b>este dispositivo</b>.`;
-panel.appendChild(note);
-
-ups.appendChild(panel);
-lifeSvcWrap.appendChild(ups);
-colIn.appendChild(lifeSvcWrap);
-
-function refreshLifeSvcVisibility(){
-  const on = (hasLife.value === "yes");
-  lifeSvcWrap.style.display = on ? "block" : "none";
-}
-
-// Eventos del bloque
-lifeSvcWrap.querySelector(`#chkLifeSvc_${letter}`).addEventListener("change", (e)=>{
-  const on = e.target.checked;
-  car.lifeService.wanted = on ? "yes" : "no";
-  panel.style.display = on ? "block" : "none";
-});
-
-lifeSvcWrap.querySelector(`#btnLifeReq_${letter}`).addEventListener("click", ()=>{
-  // persistir campos en car
-  car.lifeService.nameDni = String(nameDni.value||"").trim();
-  car.lifeService.policyNo = String(policyNo.value||"").trim();
-  car.lifeService.insurer = String(insurer.value||"").trim();
-  car.lifeService.deliveryDate = String(deliv.value||"").trim();
-  car.lifeService.email = String(email.value||"").trim();
-  car.lifeService.whatsapp = String(wa.value||"").trim();
-  car.lifeService.notes = String(notes.value||"").trim();
-  car.lifeService.wantCheaper = lifeSvcWrap.querySelector(`#chkLifeCheaper_${letter}`).checked ? "yes" : "no";
-
-  if(!car.lifeService.caseId){
-    car.lifeService.caseId = newCaseId("life");
-  }
-
-  const caseObj = {
-    id: car.lifeService.caseId,
-    type: "life_insurance_review_cancel",
-    createdAt: new Date().toISOString(),
-    carLetter: car.letter,
-    car: {
-      brand: car.brand||"",
-      model: car.model||"",
-      fuel: car.fuel||"",
-      segment: car.segment||""
-    },
-    finance: {
-      termMonths: Number(state.termMonths||0)||0,
-      financeMode: car.financeMode||"linear",
-      pvpCash: Number(car.pvpCash||0)||0,
-      discount: Number(car.financeDiscount||0)||0,
-      downPayment: Number(car.downPayment||0)||0,
-      openFeePct: Number(car.openFeePct||0)||0,
-      tin: Number(car.tin||0)||0,
-      monthlyPaymentOffer: Number(car.monthlyPayment||0)||0,
-      lifeInsMonthly: Number(car.lifeInsMonthly||0)||0,
-      maintIncludedInQuota: car.maintIncludedInQuota||"no",
-      maintPlanEurMonth: Number(car.maintPlanEurMonth||0)||0,
-      balloon: Number(car.flexGmv||0)||0
-    },
-    request: {
-      wanted: car.lifeService.wanted,
-      wantCheaper: car.lifeService.wantCheaper,
-      nameDni: car.lifeService.nameDni,
-      policyNo: car.lifeService.policyNo,
-      insurer: car.lifeService.insurer,
-      deliveryDate: car.lifeService.deliveryDate,
-      email: car.lifeService.email,
-      whatsapp: car.lifeService.whatsapp,
-      notes: car.lifeService.notes
-    },
-    pricing: {
-      base: 19.90,
-      vat: 0.21,
-      total: 19.90 * 1.21
-    },
-    status: "pending_register"
-  };
-
-  upsertServiceCase(caseObj);
-  toast("Solicitud guardada ✅ (se queda en este dispositivo)");
-});
-
-function buildLifeTemplate(){
-  const nm = car.lifeService?.nameDni || "[NOMBRE Y DNI]";
-  const pol = car.lifeService?.policyNo || "[Nº PÓLIZA / SOLICITUD]";
-  const asg = car.lifeService?.insurer || "[ASEGURADORA]";
-  const dt = car.lifeService?.deliveryDate || "[FECHA ENTREGA PÓLIZA/DOC]";
-  return (
-`ASUNTO: Desistimiento / solicitud de baja — seguros vinculado\n\n`+
-`A la atención de: ${asg}\n\n`+
-`Yo, ${nm}, solicito la baja/desistimiento del seguros vinculado a mi financiación.\n`+
-`Nº póliza/solicitud: ${pol}\n`+
-`Fecha de entrega de póliza/documentación (si aplica): ${dt}\n\n`+
-`Solicito confirmación por escrito de la tramitación y, en su caso, la devolución de la parte de prima no consumida según condiciones aplicables.\n\n`+
-`Adjunto/puedo aportar: DNI, solicitud/póliza, y cualquier documento requerido.\n\n`+
-`Atentamente,\n`+
-`${nm}\n`+
-`Fecha: ${new Date().toISOString().slice(0,10)}`
-  );
-}
-
-function downloadTextFile(filename, text){
-  try{
-    const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
-  }catch(e){
-    // fallback
-    const w = window.open("", "_blank");
-    if(w){
-      w.document.write(`<pre>${String(text).replace(/</g,"&lt;")}</pre>`);
-      w.document.close();
-    }
-  }
-}
-
-lifeSvcWrap.querySelector(`#btnLifeTpl_${letter}`).addEventListener("click", ()=>{
-  // refrescar desde inputs actuales (por si el usuario los ha rellenado)
-  car.lifeService.nameDni = String(nameDni.value||"").trim();
-  car.lifeService.policyNo = String(policyNo.value||"").trim();
-  car.lifeService.insurer = String(insurer.value||"").trim();
-  car.lifeService.deliveryDate = String(deliv.value||"").trim();
-  downloadTextFile("faircar_desistimiento_seguro_vida.txt", buildLifeTemplate());
-});
-
-lifeSvcWrap.querySelector(`#btnLifeMail_${letter}`).addEventListener("click", async ()=>{
-  car.lifeService.nameDni = String(nameDni.value||"").trim();
-  car.lifeService.policyNo = String(policyNo.value||"").trim();
-  car.lifeService.insurer = String(insurer.value||"").trim();
-  car.lifeService.deliveryDate = String(deliv.value||"").trim();
-  const txt = `Asunto: Baja/desistimiento seguros (financiación)\n\n${buildLifeTemplate()}`;
-  const btn = lifeSvcWrap.querySelector(`#btnLifeMail_${letter}`);
-  const fallback = ()=>{
-    const ta = document.createElement("textarea");
-    ta.value = txt;
-    ta.setAttribute("readonly","");
-    ta.style.position="fixed";
-    ta.style.opacity="0";
-    document.body.appendChild(ta);
-    ta.select();
-    try{ document.execCommand("copy"); }catch(e){}
-    document.body.removeChild(ta);
-  };
-  try{
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(txt);
-    } else {
-      fallback();
-    }
-    const old = btn.textContent;
-    btn.textContent = "Copiado ✅";
-    setTimeout(()=>{ btn.textContent = old; }, 1500);
-  }catch(e){
-    fallback();
-    const old = btn.textContent;
-    btn.textContent = "Copiado ✅";
-    setTimeout(()=>{ btn.textContent = old; }, 1500);
-  }
-});
-
-// Plan de mantenimiento (si la cuota lo incluye)
-const maintTitle=document.createElement("div");
-maintTitle.className="section-title";
-maintTitle.style.marginTop="10px";
-maintTitle.textContent="Plan de mantenimiento";
-colIn.appendChild(maintTitle);
-
-const maintGrid=document.createElement("div");
-maintGrid.className="grid2 keep2";
-maintGrid.appendChild(cardChoice(
-  "Incluido en la cuota",
-  "Si la cuota ya trae mantenimiento, lo sumamos y lo mostramos aparte en el resultado.",
-  "🧾",
-  car.maintIncludedInQuota==="yes",
-  ()=>{ car.maintIncludedInQuota="yes"; render(); }
-));
-maintGrid.appendChild(cardChoice(
-  "No / no lo sé",
-  "FairCar lo estimará aparte (mantenimiento medio).",
-  "🔧",
-  car.maintIncludedInQuota!=="yes",
-  ()=>{ car.maintIncludedInQuota="no"; car.maintPlanEurMonth=0; render(); }
-));
-colIn.appendChild(maintGrid);
-
-if(car.maintIncludedInQuota==="yes"){
-  const m = input("number", car.maintPlanEurMonth, "Ej: 25");
-  m.step="1";
-  m.addEventListener("input", ()=>{ car.maintPlanEurMonth = Number(m.value||0); recalc(); });
-  colIn.appendChild(field("Mantenimiento incluido (€/mes)", m, "Si no lo sabes, pregunta al concesionario si la cuota lo incluye y cuánto cuesta."));
-} else {
-  const mh=document.createElement("div");
-  mh.className="hint";
-  mh.textContent = "Mantenimiento no incluido: FairCar lo estimará aparte según segmento y motorización.";
-  colIn.appendChild(mh);
-}
-
-
-// Derecha (automático)
-
-// Total según letra ofrecida (cuota × meses) — lo primero que mostramos
-const offerPayMonths = (Number(car.installments||0)>0) ? Math.round(Number(car.installments||0)) : state.termMonths;
-colOut.appendChild(fieldInfo(
-  "Total según letra ofrecida (cuota × cuotas) (€)",
-  totalOfferEl,
-  `Multiplica la <b>cuota ofrecida</b> por el número de <b>cuotas mensuales</b> (<b>${offerPayMonths}</b>) y, si estás en <b>flexible</b>, suma el <b>GMV/valor final</b>.<br/>
-   <b>No incluye</b> la entrada ni otros pagos fuera de esa cuota.`
-));
-
-
-  // Nota PVP no confirmado (dinámica)
-  pvpNotConfirmedNote = document.createElement("div");
-  pvpNotConfirmedNote.className = "quota-check";
-  colOut.appendChild(pvpNotConfirmedNote);
-  refreshPvpNotConfirmedNote();
-
-// Descuento Auto+ punto de venta (solo EV/PHEV elegibles por precio)
-const dealerAutoWrap = document.createElement("div");
-dealerAutoWrap.style.marginTop = "8px";
-dealerAutoWrap.appendChild(fieldInfo(
-  "Descuento Auto+ punto de venta (€)",
-  dealerDiscEl,
-  `Se aplica automáticamente cuando el coche es <b>EV/PHEV</b> y entra en Auto+ (≤ 45.000€ sin IVA).<br/>
-   <b>Importante:</b> asegúrate de que el PVP / “precio si financias” <b>no</b> incluya ya este descuento para que cuadren los datos.`
-));
-const dealerChk = document.createElement("label");
-dealerChk.style.cssText = "display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:8px";
-dealerChk.innerHTML = `<input type="checkbox" id="chkAutoPlusDealerIncl_${letter}" ${car.autoPlusDealerAlreadyIncluded==="yes"?"checked":""} style="margin-top:3px" />
-  <span class="small">Ya está incluido en mi presupuesto</span>`;
-dealerAutoWrap.appendChild(dealerChk);
-colOut.appendChild(dealerAutoWrap);
-
-const _chkDealerIncl = dealerChk.querySelector("input");
-_chkDealerIncl.addEventListener("change", ()=>{
-  car.autoPlusDealerAlreadyIncluded = _chkDealerIncl.checked ? "yes" : "no";
-  syncPriceFin();
-  recalc();
-});
-
-
-// Auto+ ayuda pública (sin IRPF) — opcional para descontar de la financiación
-const govHelpWrap = document.createElement("div");
-govHelpWrap.style.marginTop = "8px";
-govHelpWrap.appendChild(fieldInfo(
-  "Ayuda Auto+ pública estimada (sin IRPF) (€)",
-  govHelpEl,
-  `Si quieres, puedes usar esta ayuda para <b>reducir el capital financiado</b> (escenario).<br/>
-   Nota: en la declaración suele haber un <b>impacto fiscal</b> (IRPF) sobre la ayuda pública.`
-));
-const govChk = document.createElement("label");
-govChk.style.cssText = "display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:8px";
-govChk.innerHTML = `<input type="checkbox" id="chkAutoPlusGovApply_${letter}" ${car.autoPlusApplyGovToFinance==="yes"?"checked":""} style="margin-top:3px" />
-  <span class="small">Descontar ayuda Auto+ de la financiación</span>`;
-govHelpWrap.appendChild(govChk);
-
-const govHint = document.createElement("div");
-govHint.className = "smallmuted";
-govHint.style.marginTop = "6px";
-govHelpWrap.appendChild(govHint);
-
-colOut.appendChild(govHelpWrap);
-
-const _chkGovApply = govChk.querySelector("input");
-_chkGovApply.addEventListener("change", ()=>{
-  car.autoPlusApplyGovToFinance = _chkGovApply.checked ? "yes" : "no";
-  recalc();
-});
-
-
-colOut.appendChild(field("Precio si financias usado por FairCar (€)", priceFinEl));
-colOut.appendChild(field("Comisión apertura calculada (€)", openEurEl));
-
-colOut.appendChild(fieldInfo(
-  "Precio financiado final (sin intereses) (€)",
-  principalNoIntEl,
-  `Es el <b>importe del préstamo</b> (sin intereses):<br/>
-   <b>(Precio si financias − entrada − ayuda Auto+ aplicada) + comisión de apertura</b>.<br/>
-   No incluye intereses (eso va en el total de abajo).`
-));
-
-
-colOut.appendChild(fieldInfo(
-  "Intereses pagados (estimados) (€)",
-  interestPaidEl,
-  `Intereses aproximados del préstamo durante el plazo.<br/>
-   Si aplicas la ayuda Auto+ a la financiación, aquí se verá el <b>ahorro de intereses</b>.`
-));
-
-colOut.appendChild(field("Cuota calculada (€/mes)", cuotaCalc, "Calculada con TIN + principal. Incluye seguro/mantenimiento solo si has indicado que van incluidos."));
-const taeRow = document.createElement("div");
-taeRow.className = "grid2 keep2";
-taeRow.appendChild(field("TAE estimada (%)", taeInline, "Se estima con plazo, apertura y cuota teórica (derivada del TIN)."));
-taeRow.appendChild(field("TAE real según cuota (%)", taeRealEl, "Calculada a partir de la cuota del concesionario. Si indicas que seguro/mantenimiento van incluidos, se descuentan para estimar la TAE del crédito."));
-colOut.appendChild(taeRow);
-
-colOut.appendChild(fieldInfo(
-  "Precio total (con intereses + seguros + mantenimiento) (€)",
-  totalWithIntEl,
-  `Es el <b>total pagado</b> en el plazo (incluye <b>entrada</b>), sumando:<br/>
-   <b>intereses</b> + <b>seguros</b> (si lo has indicado) + <b>mantenimiento</b> (si lo has indicado como incluido).<br/>
-   Nota: este total se calcula con la <b>cuota teórica</b> (TIN + apertura) + extras que marques como incluidos y, si aplica, el <b>GMV/valor final</b>. La cuota ofrecida se compara aparte.`
-));
-
-offerCols.appendChild(colIn);
-offerCols.appendChild(colOut);
-step.appendChild(offerCols);
-
-  const mismatchBox = document.createElement("div");
-  mismatchBox.className = "mismatch-box";
-  mismatchBox.style.display = "none";
-  step.appendChild(mismatchBox);
-
-
-  const quotaCheck = document.createElement("div");
-  quotaCheck.className = "quota-check";
-  step.appendChild(quotaCheck);
-
-  const taeBox = document.createElement("div");
-  taeBox.className = "tae-box";
-  step.appendChild(taeBox);
-
-// Inicializa cálculo visible
-applyPvpMode();
-syncPriceFin();
-togglePvpFields();
-refreshPvpNotConfirmedNote();
-
-// Recalcular campos derivados sin re-render completo
-function recalc(){
-  const fin = financeMonthlyCost(car, { useOffer:false });
-  const months = Number(fin.months||0)||0;
-  const payMonths = Number(fin.payMonths||fin.months||0)||0;
-
-  // Sync visibles principales
-  priceFinEl.value = String(Math.round(fin.basePrice||0));
-  discIn.value = String(Math.round(fin.disc||0));
-
-  // Auto+ — descuento obligatorio de punto de venta (si aplica al EV/PHEV por precio)
-  if(typeof dealerAutoWrap !== "undefined" && dealerAutoWrap){
-    const eligible = autoPlusDealerEligibleForFinance(car);
-    dealerAutoWrap.style.display = eligible ? "block" : "none";
-    if(eligible){
-      dealerDiscEl.value = String(Math.round(Number(fin.dealerDisc||0)));
-      if(typeof _chkDealerIncl !== "undefined" && _chkDealerIncl){
-        _chkDealerIncl.checked = (car.autoPlusDealerAlreadyIncluded==="yes");
-      }
-    } else {
-      dealerDiscEl.value = "";
-    }
-  }
-
-
-  // Auto+ — ayuda pública (sin IRPF) opcional para descontar del capital financiado
-  if(typeof govHelpWrap !== "undefined" && govHelpWrap){
-    const govAvail = Number(fin.govHelpAvail||0)||0;
-    const eligibleGov = (govAvail>0);
-    govHelpWrap.style.display = eligibleGov ? "block" : "none";
-
-    if(!eligibleGov){
-      govHelpEl.value = "";
-      if(typeof _chkGovApply !== "undefined" && _chkGovApply){
-        _chkGovApply.checked = false;
-      }
-      car.autoPlusApplyGovToFinance = "no";
-      if(typeof govHint !== "undefined" && govHint) govHint.textContent = "";
-    } else {
-      govHelpEl.value = String(Math.round(govAvail));
-      if(typeof _chkGovApply !== "undefined" && _chkGovApply){
-        _chkGovApply.checked = (car.autoPlusApplyGovToFinance==="yes");
-      }
-      const pct = clamp(Number(state.irpfPct ?? (car.auto ? car.auto.irpfPct : 0.15) ?? 0.15), 0, 0.50);
-      const irpfApprox = govAvail * pct;
-      if(car.autoPlusApplyGovToFinance==="yes"){
-        if(typeof govHint !== "undefined" && govHint){
-          govHint.textContent = `Impacto fiscal estimado (IRPF ${Math.round(pct*100)}%): ${euro(-irpfApprox)}`;
-        }
-      } else {
-        if(typeof govHint !== "undefined" && govHint) govHint.textContent = "";
-      }
-    }
-  }
-
-
-  openEurEl.value = String(Math.round(fin.openFee||0));
-  principalNoIntEl.value = String(Math.round(fin.principal||0));
-
-  // Cuota calculada por TIN (incluye seguro si lo indicas)
-  cuotaCalc.value = fin.expectedMonthlyByTIN ? (Math.round(fin.expectedMonthlyByTIN*100)/100) : "";
-  // TAE estimada (cuota teórica)
-  taeInline.value = fin.tae ? (Math.round(fin.tae*100)/100) : "";
-
-  // TAE real según cuota ofrecida (descontando extras marcados como incluidos)
-  const offeredNow = Number(car.monthlyPayment||0)||0;
-  const lifeOffer = (((car.hasLifeInLoan === "yes") || (car.insInPayment === "yes")) && (car.insMode === "monthly")) ? (Number(car.lifeInsMonthly||0)||0) : 0;
-  const maintOffer = (car.maintIncludedInQuota === "yes") ? (Number(car.maintPlanEurMonth||0)||0) : 0;
-  const creditMonthlyOfferNow = Math.max(0, offeredNow - lifeOffer - maintOffer);
-  const taeRealNow = (payMonths>0 && fin.financedBase>0 && creditMonthlyOfferNow>0)
-    ? estimateTAE(fin.financedBase, payMonths, creditMonthlyOfferNow, Number(fin.balloon||0)||0)
-    : null;
-  taeRealEl.value = (taeRealNow!==null && Number.isFinite(taeRealNow)) ? (Math.round(taeRealNow*100)/100) : "";
-
-  // Total con intereses + extras incluidos (y entrada).
-  // Importante: si el usuario marca que mantenimiento va incluido en la cuota, aquí también se suma,
-  // para que el “precio total” y la comparación con la letra sean consistentes.
-  const downV = Number(fin.down||0)||0;
-  const creditMonthly = Number(fin.creditMonthly||0)||0; // cuota del crédito (sin vida / sin mantenimiento)
-  const lifeM = Number(fin.insuranceInQuota||0)||0;
-  const maintM = Number(fin.maintInQuota||0)||0;
-  const lifeOut = Number(fin.insuranceOutMonthly||0)||0;
-  const balloonV = Number(fin.balloon||0)||0;
-
-
-  const interestPaid = (payMonths>0 && (creditMonthly>0 || fin.principal>0))
-    ? Math.max(0, (creditMonthly*payMonths + balloonV) - (Number(fin.principal||0)||0))
-    : 0;
-  interestPaidEl.value = (payMonths>0 && (creditMonthly>0 || fin.principal>0))
-    ? String(Math.round(interestPaid))
-    : "";
-
-  const total = (payMonths>0)
-    ? (downV + creditMonthly*payMonths + lifeM*payMonths + maintM*payMonths + lifeOut*payMonths + balloonV)
-    : 0;
-
-  totalWithIntEl.value = (payMonths>0 && (creditMonthly>0 || fin.principal>0))
-    ? String(Math.round(total))
-    : "";
-
-  // Total según letra ofrecida (cuota × meses + GMV si aplica; sin entrada)
-  const offered = Number(car.monthlyPayment||0)||0;
-  const totalOff = (payMonths>0 && offered>0) ? (offered*payMonths + balloonV) : 0;
-  totalOfferEl.value = (payMonths>0 && offered>0)
-    ? String(Math.round(totalOff))
-    : "";
-
-  // Chequeo de cuota (si hay cuota ofrecida)
-  if(fin.expectedMonthlyByTIN && offered>0){
-    const diff = offered - fin.expectedMonthlyByTIN;
-    const ok = Math.abs(diff) <= 15;
-    quotaCheck.className = "quota-check " + (ok ? "good" : "bad");
-    quotaCheck.textContent = ok
-      ? `✅ Cuota coherente con el TIN (diferencia ${diff>0?"+":""}${euro(diff)}/mes)`
-      : `❌ No cuadra con el TIN: ${diff>0?"+":""}${euro(diff)}/mes. Posibles extras ocultos (apertura/seguros/precio real).`;
-  } else if(fin.expectedMonthlyByTIN) {
-    quotaCheck.className = "quota-check";
-    quotaCheck.textContent = "ℹ️ Cuota calculada lista. Si tienes la cuota del concesionario, introdúcela para comprobar si cuadra y ver el total según letra.";
-  } else {
-    quotaCheck.className = "quota-check";
-    quotaCheck.textContent = "ℹ️ Rellena TIN y precio para calcular cuota y TAE.";
-  }
-
-
-
-  // Aviso FairCar: discrepancia total vs letra ofrecida (posibles costes ocultos)
-  (function(){
-    const monthsN = Number(payMonths||months||0)||0;
-    const offeredMonthly = Number(car.monthlyPayment||0)||0;
-    const expectedMonthly = Number(fin.expectedMonthlyByTIN||0)||0;
-
-    const totalExpected = (monthsN>0) ? total : 0;
-    const balloonOffer = Number(fin.balloon||0)||0;
-    const totalOffered = (monthsN>0 && offeredMonthly>0) ? Math.round(offeredMonthly*monthsN + balloonOffer) : 0;
-    const diffTotal = (totalOffered>0 && totalExpected>0) ? (totalOffered - Math.round(totalExpected)) : 0;
-    const diffMonthly = (offeredMonthly>0 && expectedMonthly>0) ? (offeredMonthly - expectedMonthly) : 0;
-
-    const show = (totalOffered>0 && totalExpected>0 && diffTotal > 300);
-
-    if(!show){
-      mismatchBox.style.display = "none";
-      mismatchBox.innerHTML = "";
-      return;
-    }
-
-    mismatchBox.style.display = "block";
-
-
-// Preguntas dinámicas: solo preguntamos lo que falta (sin redundancias).
-const esc = (s)=>String(s)
-  .replace(/&/g,"&amp;")
-  .replace(/</g,"&lt;")
-  .replace(/>/g,"&gt;")
-  .replace(/"/g,"&quot;");
-
-const questions = [];
-
-// PVP: si el usuario NO lo ha confirmado, pedimos el precio real (y solo añadimos lo del descuento si no está informado).
-const pvpKnownYes = (car.pvpKnown === "yes");
-const discVal = Number(car.financeDiscount||0)||0;
-if(!pvpKnownYes){
-  if(discVal <= 0){
-    questions.push("¿Cuál es el precio real al contado final ? ¿tenía descuento por financiar?");
-  } else {
-    questions.push("¿Cuál es el precio real al contado final ?");
-  }
-}
-
-// Comisión de apertura: lógica por respuesta.
-// - Si responde "No" (no lo sé) => preguntamos.
-// - Si responde "Sí" pero no ha puesto % => preguntamos.
-// - Si responde "Sí" y el % está informado => no preguntamos.
-const openAnswer = (car.hasOpenFee === "yes" || car.hasOpenFee === "no") ? car.hasOpenFee : "no";
-const openPctV = Number(car.openFeePct||0)||0;
-if(openAnswer === "no" || (openAnswer === "yes" && openPctV <= 0)){
-  questions.push("¿Hay comisión de apertura? (¿%?)");
-}
-
-// Seguro de vida: lógica por respuesta.
-// - Si responde "No" (no lo sé) => preguntamos.
-// - Si responde "Sí" pero no ha puesto importe => preguntamos.
-// - Si responde "Sí" y el importe está informado => no preguntamos.
-const lifeAnswer = (car.hasLifeInLoan === "yes" || car.hasLifeInLoan === "no") ? car.hasLifeInLoan : "no";
-const lifeV = Number(car.lifeInsMonthly||0)||0;
-if(lifeAnswer === "no" || (lifeAnswer === "yes" && lifeV <= 0)){
-  questions.push("¿Hay seguros incluido en la cuota/préstamo? ¿cual es el importe?");
-}
-
-// Mantenimiento: lo omitimos solo si está claramente informado como incluido con importe (>0).
-const maintKnown = (car.maintIncludedInQuota === "yes" && (Number(car.maintPlanEurMonth||0)||0) > 0);
-if(!maintKnown){
-  questions.push("¿Hay plan de mantenimiento o servicios incluidos en la cuota? ¿importe y qué incluye?");
-}
-
-const qText = questions.join("\n");
-const listItems = questions.map(q=>`<li>${esc(q)}</li>`).join("");
-const adviceBlock = (questions.length>0)
-  ? `
-    <div class="mismatch-sub">Consejo FairCar: preguntas que debe hacer el usuario</div>
-    <ul class="mismatch-list">
-      ${listItems}
-    </ul>
-    <div class="cta-row" style="margin-top:10px">
-      <button type="button" class="btn ghost" id="btnCopyQuestions">Copiar preguntas para el vendedor (WhatsApp)</button>
-    </div>
-  `
-  : ``;
-
-// TAE real implícita según la cuota ofrecida (para comparar vs TIN / TAE estimada).
-    // Calculamos la TAE tomando como "recibido" el importe efectivamente prestado (financedBase),
-    // y como cuota del crédito la cuota ofrecida menos los extras que el usuario haya marcado como incluidos.
-        const knownLife = ((car.hasLifeInLoan === "yes") || (car.insInPayment === "yes")) ? (Number(car.lifeInsMonthly||0)||0) : 0;
-    const knownMaint = (car.maintIncludedInQuota === "yes") ? (Number(car.maintPlanEurMonth||0)||0) : 0;
-    const creditMonthlyOffer = Math.max(0, offeredMonthly - knownLife - knownMaint);
-    const taeOffer = (monthsN>0 && fin.financedBase>0 && creditMonthlyOffer>0)
-      ? estimateTAE(fin.financedBase, monthsN, creditMonthlyOffer, Number(fin.balloon||0)||0)
-      : null;
-
-    mismatchBox.innerHTML = `
-  <div class="mismatch-head">FairCar: esta oferta no cuadra</div>
-  <div class="mismatch-body">
-    <div class="mismatch-line">
-      “Con los datos que has metido, el coste total esperado sería <b>${euro(Math.round(totalExpected))}</b>, pero con la letra del concesionario pagarías <b>${euro(totalOffered)}</b>. Hay una diferencia de <b>${euro(diffTotal)}</b>, lo que indica que faltan datos o hay costes incluidos que no te han explicado.”
-    </div>
-
-    <div class="mismatch-line">
-      <b>Diferencia mensual:</b> <b>${diffMonthly>0?"+":""}${euro(diffMonthly)}/mes</b> ; La TAE estimada es de <b>${(fin.tae!==null && Number.isFinite(fin.tae)) ? fin.tae.toFixed(2) : "—"}%</b> pero la TAE real segun cuota ofrecida es <b>${(taeOffer!==null && Number.isFinite(taeOffer)) ? taeOffer.toFixed(2) : "—"}%</b>
-    </div>
-
-    ${adviceBlock}
-  </div>
-`;
-    const btn = mismatchBox.querySelector("#btnCopyQuestions");
-    if(btn){
-      btn.addEventListener("click", async ()=>{
-        const fallback = ()=>{
-          const ta = document.createElement("textarea");
-          ta.value = qText;
-          ta.setAttribute("readonly","");
-          ta.style.position="fixed";
-          ta.style.opacity="0";
-          document.body.appendChild(ta);
-          ta.select();
-          try{ document.execCommand("copy"); }catch(e){}
-          document.body.removeChild(ta);
-        };
-        try{
-          if(navigator.clipboard && navigator.clipboard.writeText){
-            await navigator.clipboard.writeText(qText);
-          } else {
-            fallback();
-          }
-          const old = btn.textContent;
-          btn.textContent = "Copiado ✅";
-          setTimeout(()=>{ btn.textContent = old; }, 1500);
-        }catch(e){
-          fallback();
-          const old = btn.textContent;
-          btn.textContent = "Copiado ✅";
-          setTimeout(()=>{ btn.textContent = old; }, 1500);
-        }
+  openAmt.addEventListener("input",syncOpenFeeAmtToPct);
+  open.addEventListener("input",syncOpenFeePctToAmt);
+
+  openGrid.appendChild(field("Importe (€)",openAmt,"Si aparece en € en la oferta (ej: 'Gastos formalización: 973€')."));
+  openGrid.appendChild(field("Porcentaje (%)",open,"Si aparece en % en la oferta (ej: 'Comisión apertura: 2,5%)."));
+  d2body.appendChild(openGrid);
+  const openHint=document.createElement("div"); openHint.className="hint"; openHint.textContent="Se calculan mutuamente. Rellena uno solo si solo tienes uno de los dos.";
+  d2body.appendChild(openHint);
+  d2.appendChild(d2body);
+  step.appendChild(d2);
+
+  // ══════════════════════════════════════════════
+  // BLOQUE 3 — Extras incluidos (colapsable)
+  // ══════════════════════════════════════════════
+  // Inicializar extras desde Vision JSON si los hay
+  if(!car._extras) car._extras=[];
+
+  // Mantenimiento incluido (no en _extras, es campo separado)
+  car.autoPlusDealerAlreadyIncluded=car.autoPlusDealerAlreadyIncluded||"no";
+  car.autoPlusApplyGovToFinance=car.autoPlusApplyGovToFinance||"no";
+  car.lifeService=car.lifeService||{wanted:"no",wantCheaper:"no",nameDni:"",policyNo:"",insurer:"",deliveryDate:"",email:"",whatsapp:"",notes:"",caseId:""};
+
+  const hasExtras=car._extras.length>0||Number(car.lifeInsMonthly||0)>0||Number(car.insFinancedTotal||0)>0;
+  const d3=document.createElement("details");
+  d3.className="fc-details"; d3.style.marginTop="8px";
+  if(hasExtras) d3.open=true;
+  d3.innerHTML=`<summary>Extras incluidos en la oferta ${hasExtras?`<span class="badge warn" style="margin-left:8px;font-size:11px">${car._extras.length||"Sí"}</span>`:`<span style="color:var(--muted);font-size:12px;margin-left:8px">Seguros, mantenimiento…</span>`}</summary>`;
+  const d3body=document.createElement("div"); d3body.className="fc-details-body";
+
+  // Lista de extras
+  const extrasList=document.createElement("div"); extrasList.id=`extrasList_${letter}`; extrasList.style.marginTop="4px";
+  function renderExtrasList(){
+    extrasList.innerHTML="";
+    car._extras.forEach((ex,i)=>{
+      const row=document.createElement("div");
+      row.style.cssText="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)";
+      const badge=ex.tipo==="mensual_cuota"?"🔄 Mensual":"💰 Prima única";
+      const taeTag=ex.entra_tae?`<span class="badge ok" style="font-size:10px">En TAE</span>`:`<span class="badge warn" style="font-size:10px">No en TAE</span>`;
+      row.innerHTML=`
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:13px">${_escHtml(ex.nombre||"Extra")} <span style="font-weight:400;color:var(--muted);font-size:12px">${badge}</span> ${taeTag}</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">${euro(ex.importe||0)}${ex.tipo==="mensual_cuota"?"/mes":" total"}</div>
+        </div>
+        <button type="button" class="btn ghost" style="padding:4px 8px;font-size:12px" data-del="${i}">✕</button>
+      `;
+      row.querySelector(`[data-del]`).addEventListener("click",()=>{ car._extras.splice(i,1); syncExtrasToCarFields(); renderExtrasList(); recalc(); });
+      extrasList.appendChild(row);
+    });
+    // Aviso cancelación si hay mensual
+    const mensual=car._extras.filter(e=>e.tipo==="mensual_cuota");
+    if(mensual.length>0){
+      const svcBox=document.createElement("div");
+      svcBox.className="fc-fin-block";
+      svcBox.style.cssText="margin-top:10px;background:var(--warn-bg);border-color:var(--warn-border)";
+      svcBox.innerHTML=`
+        <div style="font-weight:800;font-size:13px">💡 Estos seguros suelen ser cancelables</div>
+        <div class="hint" style="margin-top:4px">Los seguros incluidos en cuota <b>no suelen ser obligatorios por ley</b>. Puedes cancelarlos habitualmente en los primeros 30 días o en renovación anual.</div>
+        <details class="fc-details" style="margin-top:8px">
+          <summary>Ver pasos para cancelar + plantilla</summary>
+          <div class="fc-details-body">
+            <ol class="service-steps">
+              <li>Pide el <b>nº de póliza</b>, <b>aseguradora</b> y <b>fecha de entrega</b> de la documentación.</li>
+              <li>Envía una comunicación <b>por escrito</b> (email/carta) a la aseguradora dentro del plazo de desistimiento.</li>
+              <li>Guarda el justificante de envío y confirma la baja por escrito.</li>
+              <li>Antes de cancelarlo, revisa si el seguro estaba ligado a una <b>bonificación de TIN</b>.</li>
+            </ol>
+            <div class="btn-row" style="margin-top:10px;gap:10px;display:flex;flex-wrap:wrap">
+              <button type="button" class="btn ghost" id="btnLifeTpl2_${letter}">Descargar plantilla</button>
+              <button type="button" class="btn ghost" id="btnLifeMail2_${letter}">Copiar email</button>
+            </div>
+          </div>
+        </details>
+      `;
+      extrasList.appendChild(svcBox);
+      svcBox.querySelector(`#btnLifeTpl2_${letter}`)?.addEventListener("click",()=>{
+        downloadTextFile("faircar_cancelacion_seguro.txt",buildLifeTemplate());
+      });
+      svcBox.querySelector(`#btnLifeMail2_${letter}`)?.addEventListener("click",async()=>{
+        const txt=buildLifeTemplate();
+        try{ if(navigator.clipboard) await navigator.clipboard.writeText(txt); else{ const ta=document.createElement("textarea"); ta.value=txt; ta.style="position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } toast("Copiado ✅"); }catch(e){ toast("Copiado ✅"); }
       });
     }
-  })();
-
-  // TAE real estimada (texto)
-  if(fin.tae){
-    const v = taeVerdict(car.tin, fin.tae);
-    taeBox.className = "tae-box " + (v.cls || "");
-    taeBox.innerHTML = `<div><b>TAE estimada</b> (TIN + apertura): <b>${fin.tae.toFixed(2)}%</b></div><div class="small" style="margin-top:6px">${v.text}</div>`;
-  } else {
-    taeBox.className = "tae-box";
-    taeBox.innerHTML = `<div><b>TAE estimada</b>: —</div><div class="small" style="margin-top:6px">Rellena PVP, entrada, apertura, TIN y plazo para estimar la TAE.</div>`;
+    // Aviso primas únicas no en TAE
+    const primasNoTae=car._extras.filter(e=>e.tipo==="prima_unica"&&!e.entra_tae);
+    if(primasNoTae.length>0){
+      const warn=document.createElement("div");
+      warn.style.cssText="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--warn-bg);border:1px solid var(--warn-border);font-size:12px;color:var(--warn-text)";
+      warn.innerHTML=`⚠️ <b>Prima única financiada fuera de la TAE</b>: pagas intereses sobre el importe del seguro durante todo el plazo. Coste oculto real.`;
+      extrasList.appendChild(warn);
+    }
   }
-}
 
-// Primera pasada
-recalc();
+  function syncExtrasToCarFields(){
+    // Calcular totales desde _extras para compatibilidad con el motor de cálculo
+    const mensualTotal=car._extras.filter(e=>e.tipo==="mensual_cuota").reduce((s,e)=>s+Number(e.importe||0),0);
+    const primaTotal=car._extras.filter(e=>e.tipo==="prima_unica").reduce((s,e)=>s+Number(e.importe||0),0);
+    if(mensualTotal>0){
+      car.lifeInsMonthly=mensualTotal; car.hasLifeInLoan="yes"; car.insInPayment="yes"; car.insMode="monthly";
+    } else {
+      car.lifeInsMonthly=0;
+    }
+    if(primaTotal>0){
+      car.insFinancedTotal=primaTotal; car.hasLifeInLoan="yes"; car.insMode="financed";
+    } else {
+      car.insFinancedTotal=0;
+    }
+    if(mensualTotal<=0 && primaTotal<=0){ car.hasLifeInLoan="no"; car.insInPayment="no"; }
+  }
+
+  d3body.appendChild(extrasList);
+
+  // Formulario para añadir extra manualmente
+  const addForm=document.createElement("div");
+  addForm.style.cssText="margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:var(--glass)";
+  addForm.innerHTML=`
+    <div style="font-weight:800;font-size:13px;margin-bottom:8px">➕ Añadir extra</div>
+    <div class="grid2 keep2">
+      <div class="field"><div class="label">Nombre</div><input class="input" id="extraNombre_${letter}" type="text" placeholder="Ej: Seguro vida" /></div>
+      <div class="field"><div class="label">Tipo</div>
+        <select class="input" id="extraTipo_${letter}">
+          <option value="mensual_cuota">Mensual en cuota</option>
+          <option value="prima_unica">Prima única financiada</option>
+        </select>
+      </div>
+      <div class="field"><div class="label">Importe (€)</div><input class="input" id="extraImporte_${letter}" type="number" step="1" placeholder="0" /></div>
+      <div class="field"><div class="label" style="margin-bottom:10px">¿Entra en la TAE?</div>
+        <select class="input" id="extraTae_${letter}">
+          <option value="no">No (habitual)</option>
+          <option value="si">Sí</option>
+        </select>
+      </div>
+    </div>
+    <button type="button" class="btn ghost" id="btnAddExtra_${letter}" style="margin-top:8px">Añadir</button>
+  `;
+  addForm.querySelector(`#btnAddExtra_${letter}`).addEventListener("click",()=>{
+    const nombre=String(addForm.querySelector(`#extraNombre_${letter}`).value||"").trim();
+    const tipo=addForm.querySelector(`#extraTipo_${letter}`).value;
+    const importe=Number(addForm.querySelector(`#extraImporte_${letter}`).value||0);
+    const entra_tae=addForm.querySelector(`#extraTae_${letter}`).value==="si";
+    if(!nombre||importe<=0){ toast("Rellena nombre e importe"); return; }
+    car._extras.push({nombre,tipo,importe,entra_tae});
+    syncExtrasToCarFields();
+    renderExtrasList();
+    recalc();
+    addForm.querySelector(`#extraNombre_${letter}`).value="";
+    addForm.querySelector(`#extraImporte_${letter}`).value="";
+  });
+  d3body.appendChild(addForm);
+
+  // Mantenimiento incluido en cuota
+  const maintTitle2=document.createElement("div"); maintTitle2.className="section-title"; maintTitle2.style.marginTop="14px"; maintTitle2.textContent="Plan de mantenimiento";
+  d3body.appendChild(maintTitle2);
+  const maintGrid=document.createElement("div"); maintGrid.className="grid2 keep2";
+  maintGrid.appendChild(cardChoice("Incluido en la cuota","Si la cuota ya trae mantenimiento, lo sumamos y lo mostramos aparte en el resultado.","🧾",car.maintIncludedInQuota==="yes",()=>{ car.maintIncludedInQuota="yes"; render(); }));
+  maintGrid.appendChild(cardChoice("No / no lo sé","FairCar lo estimará aparte (mantenimiento medio).","🔧",car.maintIncludedInQuota!=="yes",()=>{ car.maintIncludedInQuota="no"; car.maintPlanEurMonth=0; render(); }));
+  d3body.appendChild(maintGrid);
+  if(car.maintIncludedInQuota==="yes"){
+    const m=input("number",car.maintPlanEurMonth,"Ej: 25"); m.step="1";
+    m.addEventListener("input",()=>{ car.maintPlanEurMonth=Number(m.value||0); recalc(); });
+    d3body.appendChild(field("Mantenimiento incluido (€/mes)",m));
+  } else {
+    const mh=document.createElement("div"); mh.className="hint"; mh.textContent="FairCar lo estimará aparte según segmento y motorización.";
+    d3body.appendChild(mh);
+  }
+
+  d3.appendChild(d3body);
+  step.appendChild(d3);
+
+  // ══════════════════════════════════════════════
+  // PANEL — FairCar calcula (resultados)
+  // ══════════════════════════════════════════════
+  const calcPanel=document.createElement("div");
+  calcPanel.className="fc-fin-block";
+  calcPanel.style.cssText="margin-top:12px;background:var(--blueSoft);border-color:var(--blueSoftBorder)";
+
+  const calcTitle=document.createElement("div"); calcTitle.className="fc-fin-block-title"; calcTitle.textContent="FairCar calcula";
+  calcPanel.appendChild(calcTitle);
+  const calcSub=document.createElement("div"); calcSub.className="hint"; calcSub.style.marginTop="0"; calcSub.textContent="Resultados automáticos — solo lectura";
+  calcPanel.appendChild(calcSub);
+
+  // Auto+ bloques (dealer discount + gov help)
+  const dealerAutoWrap=document.createElement("div"); dealerAutoWrap.style.display="none";
+  const govHelpWrap=document.createElement("div"); govHelpWrap.style.display="none";
+
+  // Campos readonly
+  function roField(labelText, id, hint){
+    const f=document.createElement("div"); f.className="field";
+    const l=document.createElement("div"); l.className="label"; l.textContent=labelText;
+    const inp=input("number",0,""); inp.readOnly=true; inp.tabIndex=-1; inp.id=id+"_"+letter; inp.step="0.01";
+    inp.style.cssText="background:var(--glass);opacity:.8;cursor:default";
+    f.appendChild(l); f.appendChild(inp);
+    if(hint){ const h=document.createElement("div"); h.className="hint"; h.textContent=hint; f.appendChild(h); }
+    return {wrap:f, inp};
+  }
+
+  const {wrap:wPriceFin, inp:priceFinEl}=roField("Precio si financias usado por FairCar (€)","pricefin");
+  const {wrap:wOpenEur, inp:openEurEl}=roField("Comisión apertura (€)","openeur");
+  const {wrap:wPrincipal, inp:principalNoIntEl}=roField("Importe del préstamo (sin intereses) (€)","principal");
+  const {wrap:wInterest, inp:interestPaidEl}=roField("Intereses estimados (€)","interest");
+  const {wrap:wCuotaCalc, inp:cuotaCalc}=roField("Cuota calculada por TIN (€/mes)","cuotacalc");
+  const {wrap:wTotalOffer, inp:totalOfferEl}=roField("Total según letra ofrecida (€)","totaloffer","Cuota ofrecida × cuotas.");
+  const {wrap:wTotalInt, inp:totalWithIntEl}=roField("Precio total estimado (€)","totalint","Incluye entrada + intereses + extras marcados.");
+
+  // TAE en fila
+  const taeRow2=document.createElement("div"); taeRow2.className="grid2 keep2";
+  const {wrap:wTaeEst, inp:taeInline}=roField("TAE estimada (%)","taeest");
+  const {wrap:wTaeReal, inp:taeRealEl}=roField("TAE real según cuota (%)","taereal");
+  taeRow2.appendChild(wTaeEst); taeRow2.appendChild(wTaeReal);
+
+  // Auto+ — descuento punto de venta
+  const dealerDiscEl=input("number",0,""); dealerDiscEl.readOnly=true; dealerDiscEl.tabIndex=-1;
+  dealerAutoWrap.appendChild(field("Descuento Auto+ punto de venta (€)",dealerDiscEl));
+  const dealerChk=document.createElement("label"); dealerChk.style.cssText="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:8px";
+  dealerChk.innerHTML=`<input type="checkbox" id="chkAutoPlusDealerIncl_${letter}" ${car.autoPlusDealerAlreadyIncluded==="yes"?"checked":""} style="margin-top:3px"/>
+    <span class="small">Ya está incluido en mi presupuesto</span>`;
+  dealerAutoWrap.appendChild(dealerChk);
+  const _chkDealerIncl=dealerChk.querySelector("input");
+  _chkDealerIncl.addEventListener("change",()=>{ car.autoPlusDealerAlreadyIncluded=_chkDealerIncl.checked?"yes":"no"; syncPriceFin(); recalc(); });
+
+  // Auto+ — ayuda pública
+  const govHelpEl=input("number",0,""); govHelpEl.readOnly=true; govHelpEl.tabIndex=-1;
+  govHelpWrap.appendChild(field("Ayuda Auto+ pública estimada (sin IRPF) (€)",govHelpEl));
+  const govChk=document.createElement("label"); govChk.style.cssText="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:8px";
+  govChk.innerHTML=`<input type="checkbox" id="chkAutoPlusGovApply_${letter}" ${car.autoPlusApplyGovToFinance==="yes"?"checked":""} style="margin-top:3px"/>
+    <span class="small">Descontar ayuda Auto+ de la financiación</span>`;
+  govHelpWrap.appendChild(govChk);
+  const govHint=document.createElement("div"); govHint.className="smallmuted"; govHint.style.marginTop="6px"; govHelpWrap.appendChild(govHint);
+  const _chkGovApply=govChk.querySelector("input");
+  _chkGovApply.addEventListener("change",()=>{ car.autoPlusApplyGovToFinance=_chkGovApply.checked?"yes":"no"; recalc(); });
+
+  calcPanel.appendChild(dealerAutoWrap);
+  calcPanel.appendChild(govHelpWrap);
+  calcPanel.appendChild(wPriceFin);
+  calcPanel.appendChild(wOpenEur);
+  calcPanel.appendChild(wPrincipal);
+  calcPanel.appendChild(wInterest);
+  calcPanel.appendChild(wCuotaCalc);
+  calcPanel.appendChild(taeRow2);
+  calcPanel.appendChild(wTotalOffer);
+  calcPanel.appendChild(wTotalInt);
+
+  // PVP note + quota check + tae box
+  let pvpNotConfirmedNote=null;
+  function refreshPvpNotConfirmedNote(){
+    if(!pvpNotConfirmedNote) return;
+    const show=(car.pvpKnown!=="yes");
+    pvpNotConfirmedNote.style.display=show?"block":"none";
+    if(show) pvpNotConfirmedNote.innerHTML=`ℹ️ <b>PVP orientativo</b>: ${euro(car.pvpCashOrient||car.pvpCash||0)} según versión. Pide el PVP real al concesionario para afinar.`;
+  }
+  pvpNotConfirmedNote=document.createElement("div"); pvpNotConfirmedNote.className="quota-check"; calcPanel.appendChild(pvpNotConfirmedNote); refreshPvpNotConfirmedNote();
+
+  const quotaCheck=document.createElement("div"); quotaCheck.className="quota-check"; calcPanel.appendChild(quotaCheck);
+  const taeBox=document.createElement("div"); taeBox.className="tae-box"; calcPanel.appendChild(taeBox);
+
+  step.appendChild(calcPanel);
+
+  // Aviso discrepancia
+  const mismatchBox=document.createElement("div"); mismatchBox.className="mismatch-box"; mismatchBox.style.display="none"; step.appendChild(mismatchBox);
+
+  // ══ Helpers ══
+  function syncPriceFin(){
+    const p=Number(car.pvpCash||0)||0; const d=Number(car.financeDiscount||0)||0;
+    if(p>0){
+      const dc=clamp(d,0,p);
+      if(dc!==d){ car.financeDiscount=dc; discIn.value=String(dc); }
+      const dealerDisc=autoPlusDealerDiscountForFinance(car);
+      const pfv=Math.max(0,p-dc-dealerDisc);
+      car.priceFinanced=pfv; priceFinEl.value=String(Math.round(pfv));
+    } else { priceFinEl.value=String(Math.round(Number(car.priceFinanced||0)||0)); }
+  }
+
+  // Funciones de plantilla/email de cancelación (reutilizadas)
+  function buildLifeTemplate(){
+    const nm=car.lifeService?.nameDni||"[NOMBRE Y DNI]";
+    const pol=car.lifeService?.policyNo||"[Nº PÓLIZA / SOLICITUD]";
+    const asg=car.lifeService?.insurer||"[ASEGURADORA]";
+    const dt=car.lifeService?.deliveryDate||"[FECHA ENTREGA PÓLIZA/DOC]";
+    return `ASUNTO: Desistimiento / solicitud de baja — seguro vinculado\n\nA la atención de: ${asg}\n\nYo, ${nm}, solicito la baja/desistimiento del seguro vinculado a mi financiación.\nNº póliza/solicitud: ${pol}\nFecha de entrega de póliza/documentación: ${dt}\n\nSolicito confirmación por escrito de la tramitación y, en su caso, la devolución de la parte de prima no consumida.\n\nAtentamente,\n${nm}\nFecha: ${new Date().toISOString().slice(0,10)}`;
+  }
+  function downloadTextFile(filename,text){
+    try{ const blob=new Blob([text],{type:"text/plain;charset=utf-8"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },0); }catch(e){ const w=window.open("","_blank"); if(w){ w.document.write(`<pre>${String(text).replace(/</g,"&lt;")}</pre>`); w.document.close(); } }
+  }
+
+  // ══ recalc ══
+  function recalc(){
+    const fin=financeMonthlyCost(car,{useOffer:false});
+    const months=Number(fin.months||0)||0;
+    const payMonths=Number(fin.payMonths||fin.months||0)||0;
+
+    priceFinEl.value=String(Math.round(fin.basePrice||0));
+    discIn.value=String(Math.round(fin.disc||0));
+
+    // Auto+ dealer
+    const eligible=autoPlusDealerEligibleForFinance(car);
+    dealerAutoWrap.style.display=eligible?"block":"none";
+    if(eligible){ dealerDiscEl.value=String(Math.round(Number(fin.dealerDisc||0))); _chkDealerIncl.checked=(car.autoPlusDealerAlreadyIncluded==="yes"); }
+    else{ dealerDiscEl.value=""; }
+
+    // Auto+ gov
+    const govAvail=Number(fin.govHelpAvail||0)||0;
+    govHelpWrap.style.display=(govAvail>0)?"block":"none";
+    if(govAvail>0){
+      govHelpEl.value=String(Math.round(govAvail)); _chkGovApply.checked=(car.autoPlusApplyGovToFinance==="yes");
+      const pct=clamp(Number(state.irpfPct??0.15),0,0.50);
+      govHint.textContent=car.autoPlusApplyGovToFinance==="yes"?`Impacto fiscal estimado (IRPF ${Math.round(pct*100)}%): ${euro(-govAvail*pct)}`:"";
+    } else { govHelpEl.value=""; _chkGovApply.checked=false; car.autoPlusApplyGovToFinance="no"; govHint.textContent=""; }
+
+    openEurEl.value=String(Math.round(fin.openFee||0));
+    principalNoIntEl.value=String(Math.round(fin.principal||0));
+    cuotaCalc.value=fin.expectedMonthlyByTIN?(Math.round(fin.expectedMonthlyByTIN*100)/100):"";
+    taeInline.value=fin.tae?(Math.round(fin.tae*100)/100):"";
+
+    const offeredNow=Number(car.monthlyPayment||0)||0;
+    const lifeOffer=(((car.hasLifeInLoan==="yes")||(car.insInPayment==="yes"))&&(car.insMode==="monthly"))?(Number(car.lifeInsMonthly||0)||0):0;
+    const maintOffer=(car.maintIncludedInQuota==="yes")?(Number(car.maintPlanEurMonth||0)||0):0;
+    const creditMonthlyOfferNow=Math.max(0,offeredNow-lifeOffer-maintOffer);
+    const taeRealNow=(payMonths>0&&fin.financedBase>0&&creditMonthlyOfferNow>0)?estimateTAE(fin.financedBase,payMonths,creditMonthlyOfferNow,Number(fin.balloon||0)||0):null;
+    taeRealEl.value=(taeRealNow!==null&&Number.isFinite(taeRealNow))?(Math.round(taeRealNow*100)/100):"";
+
+    const downV=Number(fin.down||0)||0;
+    const creditMonthly=Number(fin.creditMonthly||0)||0;
+    const lifeM=Number(fin.insuranceInQuota||0)||0;
+    const maintM=Number(fin.maintInQuota||0)||0;
+    const lifeOut=Number(fin.insuranceOutMonthly||0)||0;
+    const balloonV=Number(fin.balloon||0)||0;
+    const interestPaid=(payMonths>0&&(creditMonthly>0||fin.principal>0))?Math.max(0,(creditMonthly*payMonths+balloonV)-(Number(fin.principal||0)||0)):0;
+    interestPaidEl.value=(payMonths>0&&(creditMonthly>0||fin.principal>0))?String(Math.round(interestPaid)):"";
+    const total=(payMonths>0)?(downV+creditMonthly*payMonths+lifeM*payMonths+maintM*payMonths+lifeOut*payMonths+balloonV):0;
+    totalWithIntEl.value=(payMonths>0&&(creditMonthly>0||fin.principal>0))?String(Math.round(total)):"";
+    const offered=Number(car.monthlyPayment||0)||0;
+    const totalOff=(payMonths>0&&offered>0)?(offered*payMonths+balloonV):0;
+    totalOfferEl.value=(payMonths>0&&offered>0)?String(Math.round(totalOff)):"";
+
+    // Quota check
+    if(fin.expectedMonthlyByTIN&&offered>0){
+      const diff=offered-fin.expectedMonthlyByTIN;
+      const ok=Math.abs(diff)<=15;
+      quotaCheck.className="quota-check "+(ok?"good":"bad");
+      quotaCheck.textContent=ok?`✅ Cuota coherente con el TIN (diferencia ${diff>0?"+":""}${euro(diff)}/mes)`:`❌ No cuadra con el TIN: ${diff>0?"+":""}${euro(diff)}/mes. Posibles extras ocultos (apertura/seguros/precio real).`;
+    } else if(fin.expectedMonthlyByTIN){
+      quotaCheck.className="quota-check"; quotaCheck.textContent="ℹ️ Cuota calculada. Si tienes la cuota del concesionario, introdúcela para comprobar si cuadra.";
+    } else { quotaCheck.className="quota-check"; quotaCheck.textContent="ℹ️ Rellena TIN y precio para calcular cuota y TAE."; }
+
+    // TAE box
+    if(fin.tae){ const v=taeVerdict(car.tin,fin.tae); taeBox.className="tae-box "+(v.cls||""); taeBox.innerHTML=`<div><b>TAE estimada</b> (TIN + apertura): <b>${fin.tae.toFixed(2)}%</b></div><div class="small" style="margin-top:6px">${v.text}</div>`; }
+    else{ taeBox.className="tae-box"; taeBox.innerHTML=`<div><b>TAE estimada</b>: —</div><div class="small" style="margin-top:6px">Rellena PVP, entrada, apertura, TIN y plazo para estimar la TAE.</div>`; }
+
+    // Mismatch box
+    (function(){
+      const monthsN=Number(payMonths||months||0)||0;
+      const offeredMonthly=Number(car.monthlyPayment||0)||0;
+      const expectedMonthly=Number(fin.expectedMonthlyByTIN||0)||0;
+      const totalExpected=(monthsN>0)?total:0;
+      const balloonOffer=Number(fin.balloon||0)||0;
+      const totalOffered=(monthsN>0&&offeredMonthly>0)?Math.round(offeredMonthly*monthsN+balloonOffer):0;
+      const diffTotal=(totalOffered>0&&totalExpected>0)?(totalOffered-Math.round(totalExpected)):0;
+      const diffMonthly=(offeredMonthly>0&&expectedMonthly>0)?(offeredMonthly-expectedMonthly):0;
+      const show=(totalOffered>0&&totalExpected>0&&diffTotal>300);
+      if(!show){ mismatchBox.style.display="none"; mismatchBox.innerHTML=""; return; }
+      const knownLife=((car.hasLifeInLoan==="yes")||(car.insInPayment==="yes"))?(Number(car.lifeInsMonthly||0)||0):0;
+      const knownMaint=(car.maintIncludedInQuota==="yes")?(Number(car.maintPlanEurMonth||0)||0):0;
+      const creditMonthlyOffer=Math.max(0,offeredMonthly-knownLife-knownMaint);
+      const taeOffer=(monthsN>0&&fin.financedBase>0&&creditMonthlyOffer>0)?estimateTAE(fin.financedBase,monthsN,creditMonthlyOffer,Number(fin.balloon||0)||0):null;
+      const questions=[];
+      if(car.pvpKnown!=="yes") questions.push("¿Cuál es el precio real al contado final?");
+      if(Number(car.openFeePct||0)<=0&&Number(car._openFeeAmt||0)<=0) questions.push("¿Hay comisión de apertura?");
+      if(!car._extras||car._extras.length===0) questions.push("¿Hay seguros o servicios incluidos en la cuota?");
+      if(car.maintIncludedInQuota!=="yes") questions.push("¿Hay plan de mantenimiento incluido en la cuota?");
+      const qText=questions.join("\n");
+      const listItems=questions.map(q=>`<li>${_escHtml(q)}</li>`).join("");
+      mismatchBox.style.display="block";
+      mismatchBox.innerHTML=`
+        <div class="mismatch-head">FairCar: esta oferta no cuadra</div>
+        <div class="mismatch-body">
+          <div class="mismatch-line">Con los datos actuales el coste esperado sería <b>${euro(Math.round(totalExpected))}</b> pero con la letra del concesionario pagarías <b>${euro(totalOffered)}</b>. Diferencia de <b>${euro(diffTotal)}</b>. Diferencia mensual: <b>${diffMonthly>0?"+":""}${euro(diffMonthly)}/mes</b>. TAE estimada <b>${(fin.tae!==null&&Number.isFinite(fin.tae))?fin.tae.toFixed(2):"—"}%</b> vs TAE real según cuota <b>${(taeOffer!==null&&Number.isFinite(taeOffer))?taeOffer.toFixed(2):"—"}%</b>.</div>
+          ${questions.length>0?`<div class="mismatch-sub">Preguntas para el vendedor</div><ul class="mismatch-list">${listItems}</ul><div class="cta-row" style="margin-top:10px"><button type="button" class="btn ghost" id="btnCopyQuestions_${letter}">📋 Copiar preguntas para el vendedor</button></div>`:""}
+        </div>`;
+      mismatchBox.querySelector(`#btnCopyQuestions_${letter}`)?.addEventListener("click",async()=>{
+        const btn=mismatchBox.querySelector(`#btnCopyQuestions_${letter}`);
+        try{ if(navigator.clipboard) await navigator.clipboard.writeText(qText); else{ const ta=document.createElement("textarea"); ta.value=qText; ta.style="position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } const old=btn.textContent; btn.textContent="Copiado ✅"; setTimeout(()=>{ btn.textContent=old; },1500); }catch(e){}
+      });
+    })();
+
+    refreshPvpNotConfirmedNote();
+  }
+
+  // Inicializar
+  renderExtrasList();
+  syncExtrasToCarFields();
+  syncPriceFin();
+  recalc();
 
   mount.appendChild(step);
   return { nextText: "Guardar resultados" };
 }
 
-  function fillSingleResults(car, letter){
+
+
+    function fillSingleResults(car, letter){
     const A = computeMonthlyReal(car);
 
     $("#carSingleTitle").textContent = `${car.brand||"Coche"} ${car.model||""}`.trim();
